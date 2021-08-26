@@ -8,12 +8,13 @@ recordList = []
 rejects = []
 # subjectConflicts is used to create a csv with instances of data in both ALMA and Piction SUBJECT fields, for comparison: 'subj_conflicts_[filename].csv'
 subjectConflicts = []
+dataConflicts = []
 
-# filename = 'batch4_03172021'
+filename = 'batch-35_chunk_0'
 # TODO: add this as an argument 
-filename = 'batch-37-short'
+# filename = 'batch-37-short'
 
-with open('csv_batches/' + filename + '.csv', mode='r') as infile:
+with open('csv_batches/splits/' + filename + '.csv', mode='r') as infile:
     # there are lots of NUL values in the files, so we're replacing them with ''
     reader = csv.reader((line.replace('\0','') for line in infile), delimiter=",")
     count = 0
@@ -40,7 +41,8 @@ with open('csv_batches/' + filename + '.csv', mode='r') as infile:
                         rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:]
                     except ValueError:
                         print(rowObj['UMO ID'] + ': no bib id')
-                recordList.append(rowObj)
+            rowObj['BIBID'] = rowObj['BIBID'].replace('/t','').replace('	','').replace(' ','').replace('.jpg','')
+            recordList.append(rowObj)
         count += 1
 
 # redact api key before pushing
@@ -624,9 +626,9 @@ for i in recordList:
         itemData = urllib.request.urlopen(itemUrl)
         parsedXml = ET.parse(itemData)
         root = parsedXml.getroot()
-        print(itemUrl)
         # root length = 0 is means something is wrong with your bibid (ie doesn't exist)
         if len(root) > 0:
+            print(itemUrl)
             # print(root[0].find('mms_id').text)
             itemDict['BIBID'] = i['BIBID']
             itemDict['apiurl'] = itemUrl
@@ -674,6 +676,10 @@ for i in recordList:
             itemDict['piction_PROJECT'] = i['PROJECT']
             # showing Jennifer some samples of piction/alma subject "conflicts" - may remove this version of the data if a decision is made to prioritize one 
             itemDict['piction_SUBJECT'] = i['SUBJECTS']
+            itemDict['piction_INTERNALNOTES'] = i['INTERNALNOTES']
+            itemDict['piction_FULLVOLUME'] = i['FULLVOLUME']
+            itemDict['piction_APPROVED'] = i['APPROVED']
+            # piction folder ??
 
             # these two add dash or pipe delimeters; dash is used in places, pipe is used in all multivalues
             def dashDelimeter(a,b):
@@ -874,22 +880,58 @@ for i in recordList:
                     # root[0].find("record/leader").text
                     itemDict['ARCHIVAL_COLLECTION'] = 'value has "c" in 8th position but has no value for 710'
                 if itemDict['DATE_SORT_list']['dateSort'] == '' or itemDict['DATE_SORT_list']['dateDisplay'] == '':
-                    dateString = dateFormatter(root[0].find("date_of_publication").text)
-                    itemDict['DATE_DISPLAY'] = dateString[0]
-                    itemDict['DATE_SORT'] = dateString[1]
+                    try: 
+                        dateString = dateFormatter(root[0].find("date_of_publication").text)
+                        itemDict['DATE_DISPLAY'] = dateString[0]
+                        itemDict['DATE_SORT'] = dateString[1]
+                    except AttributeError:
+                        continue 
                     # itemDict['DATE_raw'] = dateString[2]
                 else:
                     itemDict['DATE_DISPLAY'] = itemDict['DATE_SORT_list']['dateDisplay']
                     itemDict['DATE_SORT'] = itemDict['DATE_SORT_list']['dateSort']
-                if itemDict['TITLE'] == '' and i['TITLE'] != '': itemDict['TITLE'] = i['TITLE'] # title
-                if itemDict['CREATOR'] == '' and i['CREATOR'] != '': itemDict['CREATOR'] = i['CREATOR'] # creator
-                if itemDict['CALL_NUMBER'] == '' and i['CALLNUMBER'] != '': itemDict['CALL_NUMBER'] = i['CALLNUMBER'] # call number
-                if itemDict['SUBJECT'] == '' and i['SUBJECTS'] != '': itemDict['SUBJECT'] = "|".join([x.strip() for x in i['SUBJECTS'].split(';')])# subject
-                if itemDict['FORMAT'] == '' and i['FORMAT'] != '': itemDict['FORMAT'] = i['FORMAT'] # format
-                if itemDict['FORMAT_EXTENT'] == '' and i['FORMAT_EXTENT'] != '': itemDict['FORMAT_EXTENT'] = i['FORMAT_EXTENT'].replace(' cm.', ' cm').replace(' mm.', ' mm') # format_extent
-                if itemDict['PLACE'] == '' and i['PLACE'] != '': itemDict['PLACE'] = i['PLACE'] # place
-                if itemDict['LANGUAGE'] == '' and i['LANGUAGE'] != '': itemDict['LANGUAGE'] = "|".join([x.strip() for x in i['LANGUAGE'].split(';')]) # language
-                if itemDict['CATALOG_LINK'] == '' and i['CATALOG_LINK'] != '': itemDict['CATALOG_LINK'] = i['CATALOG_LINK'] # cataloglink
+                # reusing piction data:
+                # if itemDict['TITLE'] == '' and i['TITLE'] != '': itemDict['TITLE'] = i['TITLE'] # title
+                # if itemDict['CREATOR'] == '' and i['CREATOR'] != '': itemDict['CREATOR'] = i['CREATOR'] # creator
+                # if itemDict['CALL_NUMBER'] == '' and i['CALLNUMBER'] != '': itemDict['CALL_NUMBER'] = i['CALLNUMBER'] # call number
+                # # if itemDict['SUBJECT'] == '' and i['SUBJECTS'] != '': itemDict['SUBJECT'] = "|".join([x.strip() for x in i['SUBJECTS'].split(';')])# subject
+                # if itemDict['FORMAT'] == '' and i['FORMAT'] != '': itemDict['FORMAT'] = i['FORMAT'] # format
+                # if itemDict['FORMAT_EXTENT'] == '' and i['FORMAT_EXTENT'] != '': itemDict['FORMAT_EXTENT'] = i['FORMAT_EXTENT'].replace(' cm.', ' cm').replace(' mm.', ' mm') # format_extent
+                # if itemDict['PLACE'] == '' and i['PLACE'] != '': itemDict['PLACE'] = i['PLACE'] # place
+                # if itemDict['LANGUAGE'] == '' and i['LANGUAGE'] != '': itemDict['LANGUAGE'] = "|".join([x.strip() for x in i['LANGUAGE'].split(';')]) # language
+                # if itemDict['CATALOG_LINK'] == '' and i['CATALOG_LINK'] != '': itemDict['CATALOG_LINK'] = i['CATALOG_LINK'] # cataloglink
+                if itemDict['TITLE'] == '' and i['TITLE'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'TITLE', 'pictionvalue': i['TITLE']}
+                    dataConflicts.append(conflict)
+                    # itemDict['TITLE'] = i['TITLE'] # title
+                if itemDict['CREATOR'] == '' and i['CREATOR'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'CREATOR', 'pictionvalue': i['CREATOR']}
+                    dataConflicts.append(conflict)
+                    # itemDict['CREATOR'] = i['CREATOR'] # creator
+                if itemDict['CALL_NUMBER'] == '' and i['CALLNUMBER'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'CALLNUMBER', 'pictionvalue': i['CALLNUMBER']}
+                    dataConflicts.append(conflict)
+                    # itemDict['CALL_NUMBER'] = i['CALLNUMBER'] # call number
+                if itemDict['FORMAT'] == '' and i['FORMAT'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'FORMAT', 'pictionvalue': i['FORMAT']}
+                    dataConflicts.append(conflict)
+                    # itemDict['FORMAT'] = i['FORMAT'] # format
+                if itemDict['FORMAT_EXTENT'] == '' and i['FORMAT_EXTENT'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'FORMAT_EXTENT', 'pictionvalue': i['FORMAT_EXTENT']}
+                    dataConflicts.append(conflict)
+                    # itemDict['FORMAT_EXTENT'] = i['FORMAT_EXTENT'].replace(' cm.', ' cm').replace(' mm.', ' mm') # format_extent
+                if itemDict['PLACE'] == '' and i['PLACE'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'PLACE', 'pictionvalue': i['PLACE']}
+                    dataConflicts.append(conflict)
+                    # itemDict['PLACE'] = i['PLACE'] # place
+                if itemDict['LANGUAGE'] == '' and i['LANGUAGE'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'LANGUAGE', 'pictionvalue': i['LANGUAGE']}
+                    dataConflicts.append(conflict)
+                    # itemDict['LANGUAGE'] = "|".join([x.strip() for x in i['LANGUAGE'].split(';')]) # language
+                if itemDict['CATALOG_LINK'] == '' and i['CATALOG_LINK'] != '': 
+                    conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'CATALOG_LINK', 'pictionvalue': i['CATALOG_LINK']}
+                    dataConflicts.append(conflict)
+                    # itemDict['CATALOG_LINK'] = i['CATALOG_LINK'] # cataloglink
 
             del itemDict['CREATOR_list']
             del itemDict['SUBJECT_list']
@@ -910,7 +952,7 @@ for i in recordList:
                 'FILE NAME': i['FILE NAME']
             }
             rejects.append(rejectObj)
-            print("failure on UMO " + i['UMO ID'] )
+            print("failure: API results have a length of 0 on UMO " + i['UMO ID'] )
     if len(itemDict) > 0:
         items.append(itemDict)
 
@@ -923,27 +965,43 @@ for item in items:
         }
         subjectConflicts.append(confObj)
 
+directory = './output/'
+
 dataFilename = 'data_'  + filename + '.csv'
 
-dataFile = open(dataFilename + '.json', "w")
+dataFile = open(directory + 'json_' + dataFilename + '.json', "w")
 dataFile.write(json.dumps(items, indent=4))
 
-keys = items[0].keys()
-with open(dataFilename, 'w', newline='')  as output_file:
-    dict_writer = csv.DictWriter(output_file, keys)
-    dict_writer.writeheader()
-    dict_writer.writerows(items)
+print("length of item array: " + str(len(items)))
+if len(items) > 0:
+    keys = items[0].keys()
+    with open(directory + dataFilename, 'w', newline='')  as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(items)
+else: 
+    print("Big error.  Items array was length = 0")
 
-rejectsFilename = 'no_bibid_' + filename + '.csv'
-keys = rejects[0].keys()
-with open(rejectsFilename, 'w') as output_file:
-    dict_writer = csv.DictWriter(output_file, keys)
-    dict_writer.writeheader()
-    dict_writer.writerows(rejects)
+if len(rejects) > 0:
+    rejectsFilename = 'no_bibid_' + filename + '.csv'
+    keys = rejects[0].keys()
+    with open(directory + rejectsFilename, 'w') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(rejects)
 
-subj_conflictsFilename = 'subj_conflicts_' + filename + '.csv'
-keys = subjectConflicts[0].keys()
-with open(subj_conflictsFilename, 'w') as output_file:
-    dict_writer = csv.DictWriter(output_file, keys)
-    dict_writer.writeheader()
-    dict_writer.writerows(subjectConflicts)
+if len(subjectConflicts) > 0:
+    subj_conflictsFilename = 'subj_conflicts_' + filename + '.csv'
+    keys = subjectConflicts[0].keys()
+    with open(directory + subj_conflictsFilename, 'w') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(subjectConflicts)
+
+if len(dataConflicts) > 0:
+    data_conflictsFilename = 'data_conflicts_' + filename + '.csv'
+    keys = dataConflicts[0].keys()
+    with open(directory + data_conflictsFilename, 'w') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(dataConflicts)
