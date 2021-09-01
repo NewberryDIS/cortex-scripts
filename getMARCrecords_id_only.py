@@ -1351,7 +1351,7 @@ copyrightStatus = {
     "532447":"Not In Copyright - United States",
     "755253":"Not In Copyright - United States"}
 
-directory = r'./csv_batches/splits/'
+directory = r'./noPiction/'
 for filename in os.listdir(directory):
     if filename.endswith(".csv"):
         print(filename)
@@ -1360,7 +1360,7 @@ for filename in os.listdir(directory):
         # filename = 'batch-37-short'
 
         # with open(filename + '.csv', mode='r') as infile:
-        with open('csv_batches/splits/' + filename, mode='r') as infile:
+        with open(directory + filename, mode='r') as infile:
             # there are lots of NUL values in the files, so we're replacing them with ''
             reader = csv.reader((line.replace('\0','') for line in infile), delimiter=",")
             count = 0
@@ -1377,7 +1377,9 @@ for filename in os.listdir(directory):
                     # bibid will be autmatically assigned from any existing bibid field, 
                     # but if it's empty, we can try to take it from catalog link; 
                     # we're accounting for only 2 catalog link structures, not sure if there are more
+                    # if rowObj['BIB ID']
                     if rowObj['BIBID'] == '' and rowObj['CATALOG_LINK'] != '':
+                        print(rowObj['CATALOG_LINK'])
                         try: 
                             urlBibidIdx = rowObj['CATALOG_LINK'].index('BBRecID=') + 8
                             rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:]
@@ -1389,9 +1391,15 @@ for filename in os.listdir(directory):
                                 try: 
                                     urlBibidIdxEnd = rowObj['CATALOG_LINK'].index('8805867')
                                     urlBibidIdxStart = rowObj['CATALOG_LINK'].index('99') + 2
-                                    rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdxStart:urlBibidIdx]
+                                    rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdxStart:urlBibidIdxEnd]
+                                except NameError:
+                                    print(rowObj['UMO ID'] + ': no bib id')
                                 except ValueError:
                                     print(rowObj['UMO ID'] + ': no bib id')
+                    if rowObj['BIBID'].index('8805867') > 0:
+                        urlBibidIdxEnd = rowObj['BIBID'].index('8805867')
+                        urlBibidIdxStart = rowObj['BIBID'].index('99') + 2
+                        rowObj['BIBID'] = rowObj['BIBID'][urlBibidIdxStart:urlBibidIdxEnd]
                     rowObj['BIBID'] = rowObj['BIBID'].replace('/t','').replace('	','').replace(' ','').replace('.jpg','').replace('.0','').replace('.','')
                     recordList.append(rowObj)
                 count += 1
@@ -1924,6 +1932,8 @@ for filename in os.listdir(directory):
         # parsing dates from raw value
         def dateFormatter(dateString):
             # looking for dates like 1951-67
+            dateSort = ''
+            dateDisplay = ''
             dateList = re.findall('[0-9]{4}-[0-9]{2}',dateString)
             if len(dateList) > 0:
                 dateSort = dateList[0][0:4] + '/' + dateList[0][0:2]  + dateList[0][-2:]
@@ -2189,7 +2199,10 @@ for filename in os.listdir(directory):
                     # print(root[0].find('mms_id').text)
                     itemDict['BIBID'] = i['BIBID']
                     itemDict['apiurl'] = itemUrl
-                    itemDict['FILENAME'] = i['FILE NAME']
+                    try: 
+                        itemDict['FILENAME'] = i['FILE NAME']
+                    except KeyError: 
+                        itemDict['FILENAME'] = i['FILENAME']
                     itemDict['TITLE'] = '' if root[0].find('title') is None else titler(root[0].find('title'))
                     itemDict['CREATOR'] = ''
                     itemDict['CREATOR_list'] = []
@@ -2230,14 +2243,20 @@ for filename in os.listdir(directory):
                     itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
                     itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to the following terms and conditions: https://www.newberry.org/rights-and-reproductions"
                     itemDict['DISCLAIMER_NOTE'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. More information: https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf"
-                    itemDict['STANDARDIZED_RIGHTS'] = copyrightStatus[itemDict['BIBID']]
+                    try: 
+                        itemDict['STANDARDIZED_RIGHTS'] = copyrightStatus[itemDict['BIBID']]
+                    except KeyError: 
+                        itemDict['STANDARDIZED_RIGHTS'] = ''
                     # showing Jennifer some samples of piction/alma subject "conflicts" - may remove this version of the data if a decision is made to prioritize one 
-                    itemDict['piction_SUBJECT'] = i['SUBJECTS']
-                    itemDict['piction_INTERNALNOTES'] = i['INTERNALNOTES']
-                    itemDict['piction_FULLVOLUME'] = i['FULLVOLUME']
-                    itemDict['piction_APPROVED'] = i['APPROVED']
-                    # piction folder ??
-                    itemDict['piction_PROJECT'] = pictionProject(i['PROJECT'])
+                    try: 
+                        itemDict['piction_SUBJECT'] = i['SUBJECTS']
+                        itemDict['piction_INTERNALNOTES'] = i['INTERNALNOTES']
+                        itemDict['piction_FULLVOLUME'] = i['FULLVOLUME']
+                        itemDict['piction_APPROVED'] = i['APPROVED']
+                        itemDict['piction_PROJECT'] = pictionProject(i['PROJECT'])
+                        # piction folder ??
+                    except KeyError:
+                        print('no piction data')
 
                     # these two add dash or pipe delimeters; dash is used in places, pipe is used in all multivalues
                     def dashDelimeter(a,b):
@@ -2449,9 +2468,12 @@ for filename in os.listdir(directory):
                             itemDict['DATE_DISPLAY'] = itemDict['DATE_SORT_list']['dateDisplay']
                             itemDict['DATE_SORT'] = itemDict['DATE_SORT_list']['dateSort']
                         if itemDict['DATE_SORT'] != '' and itemDict['STANDARDIZED_RIGHTS'] == '':
-                            lastDate = itemDict['DATE_SORT'].split('/').max()
-                            curYear = date.year
-                            if lastDate >= curYear - 95:
+                            try: 
+                                lastDate = max(itemDict['DATE_SORT'].split('/'))
+                            except ValueError: 
+                                lastDate = itemDict['DATE_SORT']
+                            curYear = date.today().year
+                            if int(lastDate) >= curYear - 95:
                                 itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
                             else: 
                                 itemDict['STANDARDIZED_RIGHTS'] = 'Copyright Not Evaluated'
@@ -2475,9 +2497,13 @@ for filename in os.listdir(directory):
                             conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'CREATOR', 'pictionvalue': i['CREATOR']}
                             dataConflicts.append(conflict)
                             # itemDict['CREATOR'] = i['CREATOR'] # creator
-                        if itemDict['CALL_NUMBER'] == '' and i['CALLNUMBER'] != '': 
-                            conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'CALLNUMBER', 'pictionvalue': i['CALLNUMBER']}
-                            dataConflicts.append(conflict)
+                        if itemDict['CALL_NUMBER'] == '':
+                            try:
+                                i['CALLNUMBER'] != ''
+                                conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'CALLNUMBER', 'pictionvalue': i['CALLNUMBER']}
+                                dataConflicts.append(conflict)
+                            except KeyError:
+                                continue
                             # itemDict['CALL_NUMBER'] = i['CALLNUMBER'] # call number
                         if itemDict['FORMAT'] == '' and i['FORMAT'] != '': 
                             conflict = {'filename': itemDict['FILENAME'], 'bibid': itemDict['BIBID'], 'field': 'FORMAT', 'pictionvalue': i['FORMAT']}
@@ -2524,17 +2550,19 @@ for filename in os.listdir(directory):
                 items.append(itemDict)
 
         for item in items:
-            if item['SUBJECT'] != '' and item['piction_SUBJECT'] != '':
-                confObj = {
-                    'CATLINK': item['CATALOG_LINK'],
-                    'Piction SUBJECT': item['piction_SUBJECT'],
-                    'ALMA SUBJECT': item['SUBJECT']
-                }
-                subjectConflicts.append(confObj)
-
+            try:
+                if item['SUBJECT'] != '' and item['piction_SUBJECT'] != '':
+                    confObj = {
+                        'CATLINK': item['CATALOG_LINK'],
+                        'Piction SUBJECT': item['piction_SUBJECT'],
+                        'ALMA SUBJECT': item['SUBJECT']
+                    }
+                    subjectConflicts.append(confObj)
+            except KeyError: 
+                continue
         directory = './output/'
 
-        dataFilename = 'data_'  + filename + '.csv'
+        dataFilename = 'data_'  + filename
 
         dataFile = open(directory + 'json_' + dataFilename + '.json', "w")
         dataFile.write(json.dumps(items, indent=4))
@@ -2550,7 +2578,7 @@ for filename in os.listdir(directory):
             print("Big error.  Items array was length = 0")
 
         if len(rejects) > 0:
-            rejectsFilename = 'no_bibid_' + filename + '.csv'
+            rejectsFilename = 'no_bibid_' + filename
             keys = rejects[0].keys()
             with open(directory + rejectsFilename, 'w') as output_file:
                 dict_writer = csv.DictWriter(output_file, keys)
@@ -2558,7 +2586,7 @@ for filename in os.listdir(directory):
                 dict_writer.writerows(rejects)
 
         if len(subjectConflicts) > 0:
-            subj_conflictsFilename = 'subj_conflicts_' + filename + '.csv'
+            subj_conflictsFilename = 'subj_conflicts_' + filename
             keys = subjectConflicts[0].keys()
             with open(directory + subj_conflictsFilename, 'w') as output_file:
                 dict_writer = csv.DictWriter(output_file, keys)
@@ -2566,7 +2594,7 @@ for filename in os.listdir(directory):
                 dict_writer.writerows(subjectConflicts)
 
         if len(dataConflicts) > 0:
-            data_conflictsFilename = 'data_conflicts_' + filename + '.csv'
+            data_conflictsFilename = 'data_conflicts_' + filename
             keys = dataConflicts[0].keys()
             with open(directory + data_conflictsFilename, 'w') as output_file:
                 dict_writer = csv.DictWriter(output_file, keys)
