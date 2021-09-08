@@ -2184,7 +2184,7 @@ for filename in os.listdir(directory):
                 count += 1
 
         # redact api key before pushing
-        apikey = 'l8xx1a3af9fadca94b11b092e8b53962974d'
+        apikey = 'xxxx'
 
         # items is the home for the processed data; this is what's exported to 'data_[filename].csv'
         items = []
