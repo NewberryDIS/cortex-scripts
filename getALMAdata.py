@@ -7,6 +7,73 @@ from datetime import date
 apikey = 'xxx'
 projectList = []
 
+listOfIds = [
+    'ayer_655_58_c14_f36',
+    'ayer_ms_1106',
+    'ayer_ms_1391',
+    'ayer_ms_1420',
+    'ayer_ms_1503',
+    'ayer_ms_1505',
+    'ayer_ms_1884',
+    'ayer_ms_827',
+    'baskes_g1005_1540',
+    'case_3a_613',
+    'case_3a_642',
+    'case_5a_208',
+    'case_7q_2',
+    'case_7q_3',
+    'case_7q_4',
+    'case_7q_5',
+    'case_hd_8055',
+    'case_m1547_m34',
+    'Case_MS_155',
+    'Case_MS_160',
+    'case_ms_161',
+    'Case_MS_173',
+    'Case_MS_198',
+    'Case_MS_204',
+    'Case_MS_212',
+    'Case_MS_222',
+    'case_ms_32_9',
+    'case_ms_33',
+    'case_ms_vm_1500_w37e',
+    'case_v_7_01',
+    'case_y_134_188',
+    'Conroy_1',
+    'f_3923_945',
+    'g1409_c6G46_c48_1924',
+    'genealogy_books/midwestmusicians19251926chic',
+    'graff_1470',
+    'graff_1471',
+    'graff_2767',
+    'IMLS Cares',
+    'j_683_44',
+    'microfilm_191',
+    'mms_287',
+    'mms_edwards',
+    'nl_archives_02_01_20_',
+    'photo auto guides',
+    'pullman_scrapbooks/scrapbooks186511111pull_1_0029',
+    'pullman_scrapbooks/scrapbooks186519111pull_0',
+    'pullman_scrapbooks/scrapbooks186519111pull_0',
+    'pullman_scrapbooks/scrapbooks186519511pull_0',
+    'pullman_scrapbooks/scrapbooks186519611pull_0',
+    'ruggles_426',
+    'wing_facsimile_zw_883_b381',
+    'wing_ms_239',
+    'wing_ms_zw_747_t562',
+    'wing_ms_zw_845_h652',
+    'wing_zp_939_r692',
+    'wing_zp_983_b258',
+    'wing_zw_646_r622',
+    'wing_zw_646_S916',
+    'wing_zw_745_b4733',
+    'wing_zw_745_c36',
+    'wing_zw_745_s457',
+    'wing_zw_745_s458',
+    'wing_zw_883_j4151'
+]
+
 copyrightStatus = {
     "128920":"Copyright Not Evaluated",
     "912443":"Copyright Not Evaluated",
@@ -1867,45 +1934,44 @@ def languageFormatter(value):
 
 # parsing dates from raw value
 def dateFormatter(dateString):
-    # print(dateString)
     dateSort = ''
     dateDisplay = ''
     # looking for dates like 1876-1987
-    if len(re.findall('[0-9]{4}-[0-9]{4}',dateString)) > 0:
-        dateList = re.findall('[0-9]{4}-[0-9]{4}',dateString)
+    if len(re.findall('[0-9]{4}\??-[0-9]{4}\??',dateString)) > 0:
+        dateList = re.findall('[0-9]{4}\??-[0-9]{4}\??',dateString)
         dateList.sort()
-        dateSort = dateList[0] + '/' + dateList[-1]
+        dateSort = dateList[0].replace('?', '') + '/' + dateList[-1].replace('?', '')
         dateDisplay = dateList[0] + '-' + dateList[-1]
     # looking for dates like 1951-67
-    elif len(re.findall('[0-9]{4}-[0-9]{2}',dateString)) > 0:
-        dateList = re.findall('[0-9]{4}-[0-9]{2}',dateString)
+    elif len(re.findall('[0-9]{4}\??-[0-9]{2}\??',dateString)) > 0:
+        dateList = re.findall('[0-9]{4}\??-[0-9]{2}\??',dateString)
         # dateList.sort()
-        dateSort = dateList[0][0:4] + '/' + dateList[0][0:2]  + dateList[0][-2:]
+        dateSortNoQ = dateList[0].replace('?', '')
+        dateSort = dateSortNoQ[0:4] + '/' + dateSortNoQ[0:2]  + dateSortNoQ[-2:]
         dateDisplay = dateList[0][0:4] + '-' + dateList[0][-2:]
-    elif len(re.findall('[0-9]{4}',dateString)) > 0:
-        dateList = re.findall('[0-9]{4}',dateString)
+    elif len(re.findall('[0-9]{4}\??',dateString)) > 0:
+        dateList = re.findall('[0-9]{4}\??',dateString)
         dateList.sort()
         for d in dateList: 
             if len(dateSort) > 0:
-                # print(d)
-                dateSort = dateSort + '/' + d
+                dateSort = dateSort + '/' + d.replace('?', '')
                 dateDisplay = dateDisplay + '-' + d
             else: 
-                dateSort = d
+                dateSort = d.replace('?', '')
                 dateDisplay = d
     else:
         # looking for dates like 19-- 
-        dateList = re.findall('[0-9]{3}-{1}?|[0-9]{2}-{2}?',dateString)
+        dateList = re.findall('[0-9]{3}-{1}?\??|[0-9]{2}-{2}?\??',dateString)
         if len(dateList) > 0:
             for d in dateList:   
                 d = d.replace('-','0')
             dateList = dateList.sort()
             for d in dateList:
                 if len(dateSort) > 0:
-                    dateSort = dateSort + '/' + d
+                    dateSort = dateSort + '/' + d.replace('?', '')
                     dateDisplay = dateDisplay + '-' + d
                 else: 
-                    dateSort = d
+                    dateSort = d.replace('?', '')
                     dateDisplay = d
     if 'dateSort' not in locals():
         dateSort = ''
@@ -1916,7 +1982,6 @@ def dateFormatter(dateString):
     # else: 
     #     dateDisplay = dateString.strip(" .,").replace('[','').replace(']','')
     deleteList = ['n.d.', 'no date', 'undated']
-    # print(dateString)
     for dl in deleteList:
         if dateDisplay == dl:
             dateDisplay = ''
@@ -1924,10 +1989,9 @@ def dateFormatter(dateString):
 
 # truncating titles at the first word break after n=150 characters; increase 'length' input parameter to change n
 def titleFormatter(content, length=150, suffix='...'):
-    content = content.text.replace("[", "").replace("]", "") 
+    content = content.replace("[manuscript]","").replace("[", "").replace("]", "") 
     if content[-1:] == '/' or (content[-1:] == '.' and content[-3:] != '...') or content[-1:] == ',' :
-        val = content[:-1].strip()
-        content = val
+        content = content.strip('/.,')
     if len(content) <= length:
         returnValue = content
     else:
@@ -2160,7 +2224,7 @@ def resolveList(value):
             valueString = pipeDelimeter(valueString, val)
     return valueString
 
-directory = r'./noPiction/'
+directory = r'./cjc/'
 for filename in os.listdir(directory):
     if filename.endswith(".csv"):
         print(filename)
@@ -2190,7 +2254,7 @@ for filename in os.listdir(directory):
                     # bibid will be autmatically assigned from any existing bibid field, 
                     # but if it's empty, we can try to take it from catalog link; 
                     # we're accounting for only 2 catalog link structures, not sure if there are more
-                    if rowObj['BIBID'] == '' and rowObj['CATALOG_LINK'] != '':
+                    if rowObj['BIBID'] == '' and rowObj['CATALOG_LINK'] != '' and not rowObj['BIBID'].isdigit():
                         try: 
                             urlBibidIdx = rowObj['CATALOG_LINK'].index('BBRecID=') + 8
                             rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:]
@@ -2204,251 +2268,306 @@ for filename in os.listdir(directory):
                                     urlBibidIdxStart = rowObj['CATALOG_LINK'].index('99') + 2
                                     rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdxStart:urlBibidIdx]
                                 except:
-                                    rejects.append(rowObj)
-                                    rejectCount += 1
-                                    print(rowObj['UMO ID'] + ': no bib id')
+                                    try:
+                                         if rowObj['CATALOG_LINK'].isdigit(): 
+                                             rowObj['BIBID'] = rowObj['CATALOG_LINK'].strip('.0')
+                                    except:
+                                        rejects.append(rowObj)
+                                        rejectCount += 1
+                                        print(rowObj['UMO ID'] + ': no bib id')
                     rowObj['BIBID'] = rowObj['BIBID'].replace('/t','').replace('	','').replace(' ','').replace('.jpg','').replace('.0','').replace('.','')
-                    # print('bibid = ' + rowObj['BIBID'])
-                    # print('umo id= ' + rowObj['UMO ID'])
                     recordList.append(rowObj)
                 count += 1
         items = []
 
         for i in recordList:
             itemDict = {}
-
-            alreadyDoneIndex = next((index for (index, d) in enumerate(items) if len(items) > 0 and 'BIBID' in d and d['BIBID'] == i['BIBID']), None)
-            if alreadyDoneIndex != None:
-                # print(i['BIBID'] + ' already done, reusing...')
-                itemDict = items[alreadyDoneIndex]
-                # have to make sure we're not reusing the filename too
-                itemDict['FILENAME'] = i['FILE NAME']
-            
-            elif i['BIBID'] != '':
-                itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
-                itemData = urllib.request.urlopen(itemUrl)
-                parsedXml = ET.parse(itemData)
-                root = parsedXml.getroot()
-                if len(root) > 0:
-                    print(itemUrl)
-                    itemDict['BIBID'] = i['BIBID']
-                    itemDict['FILENAME'] = i['FILE NAME']
-                    itemDict['TITLE'] = '' if root[0].find('title') is None else titleFormatter(root[0].find('title'))
-                    itemDict['CATALOG_LINK'] = 'https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99' + str(i['BIBID']) + '8805867'
-                    itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
-                    itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to the following terms and conditions: https://www.newberry.org/rights-and-reproductions"
-                    itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. More information: https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf"
-                    itemDict['piction_PROJECT'] = pictionProject(i['PROJECT'])
-                    itemDict['piction_INTERNALNOTES'] = i['INTERNALNOTES']
-                   
-                    itemDict['CREATOR'] = ''
-                    itemDict['CALL_NUMBER'] = ''
-                    itemDict['FORMAT_EXTENT'] = ''
-                    itemDict['LANGUAGE'] = ''
-                    itemDict['SUBJECTS'] = ''
-                    itemDict['PLACE'] = ''
-                    itemDict['FORMAT'] = ''
-                    itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = ''
-                    itemDict['SUMMARY'] = ''
-                    itemDict['DATE_DISPLAY'] = ''
-                    itemDict['DATE_SORT'] = ''
-                    itemDict['ARCHIVAL_COLLECTION'] = ''
-
-                    itemDict['SUBJECTS_list'] = []
-                    itemDict['PLACE_list'] = []
-                    itemDict['FORMAT_list'] = []
-
-                    if len(i['FULLVOLUME']) > 0:
-                        returnValue = ''
-                        try:
-                            returnValue = 'fullvolume=yes' if i['FULLVOLUME'].index('yes') > 0 or i['FULLVOLUME'].index('Yes') > 0 else ''
-                        except:
-                            try: 
-                                returnValue = 'fullvolume=no' if i['FULLVOLUME'].index('no') > 0 or i['FULLVOLUME'].index('No') > 0 else ''
-                            except: 
-                                returnValue = ''
-                        if len(itemDict['piction_INTERNALNOTES'] ) > 0:
-                            itemDict['piction_INTERNALNOTES']  = itemDict['piction_INTERNALNOTES']  + '; ' + returnValue
-                        else: 
-                            itemDict['piction_INTERNALNOTES']  = returnValue
-                    if root[0].find("record/leader").text[7] == 'c':
-                        if len(itemDict['piction_INTERNALNOTES'] ) > 0:
-                            itemDict['piction_INTERNALNOTES']  = itemDict['piction_INTERNALNOTES']  + '; needs_arch_coll_title'
-                        else: 
-                            itemDict['piction_INTERNALNOTES']  = 'needs_arch_coll_title'
-                    try: 
-                        itemDict['STANDARDIZED_RIGHTS'] = copyrightStatus[itemDict['BIBID']]
-                    except KeyError: 
-                        itemDict['STANDARDIZED_RIGHTS'] = ''
-
-                    for record in root[0].find('record'):
-                        def valueAssignmentFromCode(record,code):
-                            if code == '008' or code == '041':
-                                if code == '008':
-                                    itemDict['LANGUAGE'] = languageFormatter(record.text)
-                                else:
-                                    langString = ''
-                                    for value in record.findall('subfield'):
-                                        code = value.get('code')
-                                        if code == 'a':
-                                            langString = languageFormatter(value.text)
-                                        else: 
-                                            langString = langString + "|" + languageFormatter(value.text)
-                                    itemDict['LANGUAGE'] = langString
-                            elif code == '045':
-                                dateString = ''
-                                for value in record.findall('subfield'): 
-                                    if dateString == '':
-                                        dateString = value.text
-                                    else: 
-                                        dateString = dateString + ' ' + value.text
-                                dateList = dateFormatter(dateString)
-                                itemDict['DATE_DISPLAY'] = dateList[0]
-                                itemDict['DATE_SORT'] = dateList[1]
-                            elif code == '090' or code == '099' or code == '852': 
-                                for value in record.findall('subfield'):
-                                    if value.get('code').isalpha():
-                                        itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
-                            elif code == '100' or code == '110': 
-                                for value in record.findall('subfield'): 
-                                    code = value.get('code')
-                                    if code != 'e' and code.isalpha():
-                                        # remove trailing . and ,
-                                        valueText = value.text.strip(',. ')
-                                        itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], valueText)
-                            elif code == '245': 
-                                returnValue = ''
-                                for value in record.findall('subfield'): 
-                                    code = value.get('code')
-                                    if code not in 'xyz':
-                                        returnValue = concatenator(returnValue, value.text)
-                                itemDict['TITLE'] = returnValue
-                            elif code == '300':
-                                for value in record.findall('subfield'): 
-                                    valueText = value.text.replace(' cm.', ' cm').replace(' mm.', ' mm')
-                                    itemDict['FORMAT_EXTENT'] = concatenator(itemDict['FORMAT_EXTENT'], valueText)
-                            elif code == '520':
-                                for value in record.findall('subfield'):
-                                    if value.get('code') == 'a' or value.get('code') == 'b':
-                                        itemDict['SUMMARY'] = value.text 
-                            elif code == '545':
-                                for value in record.findall('subfield'):
-                                    if value.get('code') == 'a' or value.get('code') == 'b':
-                                        itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = value.text 
-                            elif code == '610' or code == '650':
-                                # using a, x, y subfields for subject and then using/supplimenting place with z
-                                subjectDict = {
-                                    'a': '',
-                                    'v': '',
-                                    'x': '',
-                                    'y': '',
-                                    'z': ''
-                                }
-                                # pushing values into a list 
-                                for value in record.findall('subfield'): 
-                                    valueText = value.text.strip(',.')
-                                    code = value.get('code')
-                                    if code == 'a': subjectDict['a'] = valueText
-                                    elif code == 'v': subjectDict['v'] = dashDelimeter(subjectDict['v'], valueText)
-                                    elif code == 'z': subjectDict['z'] = dashDelimeter(subjectDict['z'], valueText)
-                                # fullValue = dashDelimeter(subjectDict['a'], dashDelimeter(subjectDict['x'], subjectDict['y']))
-                                if len(subjectDict['a']) > 0 and subjectDict['a'] not in itemDict['SUBJECTS_list'] and len(itemDict['SUBJECTS_list']) < 5:
-                                    itemDict['SUBJECTS_list'].append(subjectDict['a'])
-                                stringVersion = ''
-                                for val in itemDict['SUBJECTS_list']:
-                                    stringVersion = pipeDelimeter(stringVersion, val)
-                                itemDict['SUBJECTS'] = stringVersion
-                                if subjectDict['z'] not in itemDict['PLACE_list'] and len(subjectDict['z']) > 0:
-                                    itemDict['PLACE_list'].append(subjectDict['z'])
-                                    itemDict['PLACE_list'] = sorted(itemDict['PLACE_list'])
-                                if subjectDict['v'] not in itemDict['FORMAT_list'] and len(subjectDict['v']) > 0:
-                                    itemDict['FORMAT_list'].append(subjectDict['v'])
-                                    itemDict['FORMAT_list'] = sorted(itemDict['FORMAT_list'])
-                            elif code == '651':
-                                for value in record.findall('subfield'): 
-                                    if value.get('code') == 'a':
-                                        valueText = value.text
-                                        if '(Ill.)' in valueText:
-                                            valueText = 'Illinois--' + valueText[:-7]
-                                        if '(Chicago, Ill.)' in valueText:
-                                            valueText = 'Illinois--' + valueText[:-16]
-                                        if '(Italy)' in valueText:
-                                            valueText = 'Italy--' + valueText[:-8]
-                                        if '(France)' in valueText:
-                                            valueText = 'France--' + valueText[:-9]
-                                        if '(West Germany)' in valueText:
-                                            valueText = 'West Germany--' + valueText[:-15]
-                                        if '(Germany)' in valueText:
-                                            valueText = 'Germany--' + valueText[:-10]
-                                        if valueText not in itemDict['PLACE_list']: 
-                                            itemDict['PLACE_list'].append(valueText)
-                                    elif value.get('code') == 'v':
-                                        valueText = value.text.strip('.,')
-                                        if valueText not in itemDict['FORMAT_list']: 
-                                            itemDict['FORMAT_list'].append(valueText)
-                                placeString = ''
-                                for idx, val in enumerate(itemDict['PLACE_list']):
-                                    if idx < 5:
-                                        placeString = pipeDelimeter(placeString, val)
-                                itemDict['PLACE'] = placeString
-                            elif code == '655':
-                                try: 
-                                    if itemDict['FORMAT'].count('|') > 4:
-                                        print(itemDict['FORMAT'])
-                                except:
-                                    for value in record.findall('subfield'): 
-                                        if value.get('code') == 'a':
-                                            valueText = value.text.strip('.,')
-                                            if valueText not in itemDict['FORMAT_list']: 
-                                                itemDict['FORMAT_list'].append(valueText)
-                                    formatString = ''
-                                    for val in itemDict['FORMAT_list']:
-                                        try:
-                                            parenDex = val.index('(')
-                                            firstCharAfter = val[parenDex + 1]
-                                            if firstCharAfter.islower():
-                                                val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
-                                        except:
-                                            val = val
-                                        formatString = pipeDelimeter(formatString, val)
-                                    itemDict['FORMAT'] = formatString
-                            elif code == '710':
-                                if root[0].find("record/leader").text[7] == 'c':
-                                    for value in record.findall('subfield'): 
-                                        if value.get('code') == 'a':
-                                            itemDict['ARCHIVAL_COLLECTION'] = itemDict['TITLE'] + '|' + value.text
-                            else:
-                                print("code not in crosswalk; code: " + str(code) + ";" )
-                        # link to crosswalk:
-                        # https://docs.google.com/spreadsheets/d/1etIvF5Vjn1kty51qevsZ9mlWTOl_U9p_iCzWk_WOP9M/edit#gid=1296018796
-                                                
-                        marcCode = record.get('tag')
-                        valueAssignmentFromCode(record, marcCode)
-                        
-                        if ('PLACE' not in itemDict or len(itemDict['PLACE']) == 0) and len(itemDict['PLACE_list']) > 0: 
-                            itemDict['PLACE'] = resolveList('PLACE_list')
-                        if ('SUBJECTS' not in itemDict or len(itemDict['SUBJECTS']) == 0) and len(itemDict['SUBJECTS_list']) > 0: 
-                            itemDict['SUBJECTS']  = resolveList('SUBJECTS_list')
-                        if 'DATE_SORT' in itemDict and itemDict['DATE_SORT'] != '' and itemDict['STANDARDIZED_RIGHTS'] == '':
-                            lastDate = max(itemDict['DATE_SORT'].split('/'))
-                            curYear = date.today().year
-                            if int(lastDate) >= curYear - 95:
-                                itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
-                            else: 
-                                itemDict['STANDARDIZED_RIGHTS'] = 'Copyright Not Evaluated'
-                        elif ('DATE_SORT' not in itemDict or itemDict['DATE_SORT'] == '') and itemDict['STANDARDIZED_RIGHTS'] == '':
-                            itemDict['STANDARDIZED_RIGHTS'] = 'Copyright Not Evaluated'
-                        if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
+            keepGoing = True
+            # for a in listOfIds:
+            #     if a in i['FILE NAME']:
+            #         keepGoing = True
+            if keepGoing: 
+                alreadyDoneIndex = next((index for (index, d) in enumerate(items) if len(items) > 0 and 'BIBID' in d and d['BIBID'] == i['BIBID']), None)
+                if alreadyDoneIndex != None:
+                    # print(i['BIBID'] + ' already done, reusing...')
+                    itemDict = items[alreadyDoneIndex]
+                    # have to make sure we're not reusing the filename too
+                    itemDict['FILE NAME'] = i['FILE NAME']
+                
+                elif i['BIBID'] != '':
+                    itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
+                    itemData = urllib.request.urlopen(itemUrl)
+                    parsedXml = ET.parse(itemData)
+                    root = parsedXml.getroot()
+                    if len(root) > 0:
+                        print(itemUrl)
+                        itemDict['BIBID'] = i['BIBID']
+                        itemDict['FILE NAME'] = i['FILE NAME']
+                        itemDict['TITLE'] = '' if root[0].find('title') is None else titleFormatter(root[0].find('title').text)
+                        itemDict['CATALOG_LINK'] = 'https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99' + str(i['BIBID']) + '8805867'
+                        itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
+                        itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to the following terms and conditions: https://www.newberry.org/rights-and-reproductions"
+                        itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. More information: https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf"
+                        itemDict['piction_PROJECT'] = pictionProject(i['PROJECT'])
+                        itemDict['piction_INTERNALNOTES'] = i['INTERNALNOTES']
+                        # DCMI type
+                        if itemDict['FILE NAME'].endswith(".mov") or itemDict['FILE NAME'].endswith(".avi") or itemDict['FILE NAME'].endswith(".mp4") or itemDict['FILE NAME'].endswith(".m2t") or itemDict['FILE NAME'].endswith(".m4v"):
                             itemDict['DCMIType'] = "Moving Image"
-                        elif itemDict['FILENAME'].endswith(".wav") or  itemDict['FILENAME'].endswith(".mp3"):
+                        elif itemDict['FILE NAME'].endswith(".wav") or  itemDict['FILE NAME'].endswith(".mp3"):
                             itemDict['DCMIType'] = "Sound"
                         else:
                             itemDict['DCMIType'] = i['TYPE'].replace('; ','|').replace(';','|')
+                            # itemDict['DCMIType'] = typer(i['TYPE'])
+                    
+                        itemDict['CREATOR'] = ''
+                        itemDict['PUBLISHER'] = ''
+                        itemDict['CALL_NUMBER'] = ''
+                        itemDict['FORMAT_EXTENT'] = ''
+                        itemDict['DESCRIPTION'] = ''
+                        itemDict['LANGUAGE'] = ''
+                        itemDict['SUBJECTS'] = ''
+                        itemDict['PLACE'] = ''
+                        itemDict['FORMAT'] = ''
+                        itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = ''
+                        itemDict['SUMMARY'] = ''
+                        itemDict['DATE_DISPLAY'] = ''
+                        itemDict['DATE_SORT'] = ''
+                        itemDict['ARCHIVAL_COLLECTION'] = ''
+                        itemDict['ARCHIVAL_COLLECTION_list'] = {
+                            '1': '',
+                            '2': ''
+                        }
 
-                        
-                    del itemDict['SUBJECTS_list']
-                    del itemDict['PLACE_list']
-                    del itemDict['FORMAT_list']
+                        itemDict['SUBJECTS_list'] = []
+                        itemDict['PLACE_list'] = []
+                        itemDict['FORMAT_list'] = []
+
+                        if len(i['FULLVOLUME']) > 0:
+                            returnValue = ''
+                            try:
+                                returnValue = 'fullvolume=yes' if i['FULLVOLUME'].index('yes') > 0 or i['FULLVOLUME'].index('Yes') > 0 else ''
+                            except:
+                                try: 
+                                    returnValue = 'fullvolume=no' if i['FULLVOLUME'].index('no') > 0 or i['FULLVOLUME'].index('No') > 0 else ''
+                                except: 
+                                    returnValue = ''
+                            if len(itemDict['piction_INTERNALNOTES'] ) > 0:
+                                itemDict['piction_INTERNALNOTES']  = itemDict['piction_INTERNALNOTES']  + '; ' + returnValue
+                            else: 
+                                itemDict['piction_INTERNALNOTES']  = returnValue
+                        try: 
+                            itemDict['STANDARDIZED_RIGHTS'] = copyrightStatus[itemDict['BIBID']]
+                        except KeyError: 
+                            itemDict['STANDARDIZED_RIGHTS'] = ''
+
+                        for record in root[0].find('record'):
+                            def valueAssignmentFromCode(record,code):
+                                if code == '008' or code == '041':
+                                    if code == '008' and itemDict['LANGUAGE'] == '':
+                                        itemDict['LANGUAGE'] = languageFormatter(record.text)
+                                    else:
+                                        langString = ''
+                                        for value in record.findall('subfield'):
+                                            if value.get('code') == 'a':
+                                                langString = languageFormatter(value.text)
+                                                langString = pipeDelimeter(itemDict['LANGUAGE'], langString)
+                                        itemDict['LANGUAGE'] = langString
+                                elif code == '045':
+                                    dateString = ''
+                                    for value in record.findall('subfield'): 
+                                        if dateString == '':
+                                            dateString = value.text
+                                        else: 
+                                            dateString = dateString + ' ' + value.text
+                                    dateList = dateFormatter(dateString)
+                                    itemDict['DATE_DISPLAY'] = dateList[0]
+                                    itemDict['DATE_SORT'] = dateList[1]
+                                elif code == '090' or code == '099' or code == '852': 
+                                    for value in record.findall('subfield'):
+                                        if value.get('code').isalpha():
+                                            itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                                elif code == '100' or code == '110': 
+                                    for value in record.findall('subfield'): 
+                                        code = value.get('code')
+                                        if code != 'e' and code.isalpha():
+                                            # remove trailing . and ,
+                                            valueText = value.text.strip(',. ')
+                                            itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], valueText)
+                                elif code == '245': 
+                                    returnValue = ''
+                                    for value in record.findall('subfield'): 
+                                        code = value.get('code')
+                                        if code not in 'cgh':
+                                            if code == 'a':
+                                                itemDict['ARCHIVAL_COLLECTION_list']['1'] = value.text.strip('.,')
+                                            returnValue = concatenator(returnValue, value.text)
+                                    itemDict['TITLE'] = titleFormatter(returnValue)
+                                elif code == '260':
+                                    for value in record.findall('subfield'): 
+                                        code = value.get('code')
+                                        if code == 'b':
+                                            itemDict['PUBLISHER'] = value.text
+                                        if code == 'c':
+                                            dateValue = value.text
+                                            patternIsHyphen = re.match("([0-9]{4})-([0-9]{4})",dateValue)
+                                            if patternIsHyphen:
+                                                dateRegex = re.search("([0-9]{4})-([0-9]{4})", dateValue)
+                                                itemDict['DATE_DISPLAY'] = dateRegex.group(1) + '-' + dateRegex.group(2)
+                                                itemDict['DATE_SORT'] = dateRegex.group(1) + '/' + dateRegex.group(2)
+                                            else: 
+                                                dateList = dateFormatter(value.text)
+                                                itemDict['DATE_DISPLAY'] = dateList[0]
+                                                itemDict['DATE_SORT'] = dateList[1]
+                                elif code == '300':
+                                    for value in record.findall('subfield'): 
+                                        valueText = value.text.replace(' cm.', ' cm').replace(' mm.', ' mm')
+                                        itemDict['FORMAT_EXTENT'] = concatenator(itemDict['FORMAT_EXTENT'], valueText)
+                                elif code == '500': 
+                                    for value in record.findall('subfield'): 
+                                        if value.get('code') == 'a':
+                                            itemDict['DESCRIPTION'] = value.text
+                                elif code == '520':
+                                    valueObj = {
+                                        'a': '',
+                                        'b': ''
+                                    }
+                                    for value in record.findall('subfield'):
+                                        if value.get('code') == 'a':
+                                            valueObj['a']  = value.text
+                                        if value.get('code') == 'b':
+                                            valueObj['b']  = value.text
+                                        # concat both but if there's only b or only a we strip out spaces at the front and end
+                                        itemDict['SUMMARY'] = valueObj['a'] + ' ' +  valueObj['b'] 
+                                        itemDict['SUMMARY'] = itemDict['SUMMARY'].strip(' ')
+                                elif code == '545':
+                                    for value in record.findall('subfield'):
+                                        if value.get('code') == 'a' or value.get('code') == 'b':
+                                            itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = value.text 
+                                elif code == '610' or code == '650':
+                                    # using a, x, y subfields for subject and then using/supplimenting place with z
+                                    subjectDict = {
+                                        'a': '',
+                                        'v': '',
+                                        'x': '',
+                                        'y': '',
+                                        'z': ''
+                                    }
+                                    # pushing values into a list 
+                                    for value in record.findall('subfield'): 
+                                        valueText = value.text.strip(',.')
+                                        code = value.get('code')
+                                        if code == 'a': subjectDict['a'] = valueText
+                                        elif code == 'v': subjectDict['v'] = dashDelimeter(subjectDict['v'], valueText)
+                                        elif code == 'z': subjectDict['z'] = dashDelimeter(subjectDict['z'], valueText)
+                                    # fullValue = dashDelimeter(subjectDict['a'], dashDelimeter(subjectDict['x'], subjectDict['y']))
+                                    if len(subjectDict['a']) > 0 and subjectDict['a'] not in itemDict['SUBJECTS_list'] and len(itemDict['SUBJECTS_list']) < 5:
+                                        itemDict['SUBJECTS_list'].append(subjectDict['a'])
+                                    stringVersion = ''
+                                    for val in itemDict['SUBJECTS_list']:
+                                        stringVersion = pipeDelimeter(stringVersion, val)
+                                    itemDict['SUBJECTS'] = stringVersion
+                                    if subjectDict['z'] not in itemDict['PLACE_list'] and len(subjectDict['z']) > 0:
+                                        itemDict['PLACE_list'].append(subjectDict['z'])
+                                        itemDict['PLACE_list'] = sorted(itemDict['PLACE_list'])
+                                    if subjectDict['v'] not in itemDict['FORMAT_list'] and len(subjectDict['v']) > 0:
+                                        itemDict['FORMAT_list'].append(subjectDict['v'])
+                                        itemDict['FORMAT_list'] = sorted(itemDict['FORMAT_list'])
+                                elif code == '651':
+                                    for value in record.findall('subfield'): 
+                                        if value.get('code') == 'a':
+                                            valueText = value.text
+                                            if '(Ill.)' in valueText:
+                                                valueText = 'Illinois--' + valueText[:-7]
+                                            if '(Chicago, Ill.)' in valueText:
+                                                valueText = 'Illinois--' + valueText[:-16]
+                                            if '(Italy)' in valueText:
+                                                valueText = 'Italy--' + valueText[:-8]
+                                            if '(France)' in valueText:
+                                                valueText = 'France--' + valueText[:-9]
+                                            if '(West Germany)' in valueText:
+                                                valueText = 'West Germany--' + valueText[:-15]
+                                            if '(Germany)' in valueText:
+                                                valueText = 'Germany--' + valueText[:-10]
+                                            if valueText not in itemDict['PLACE_list']: 
+                                                itemDict['PLACE_list'].append(valueText)
+                                        elif value.get('code') == 'v':
+                                            valueText = value.text.strip('.,')
+                                            if valueText not in itemDict['FORMAT_list']: 
+                                                itemDict['FORMAT_list'].append(valueText)
+                                    placeString = ''
+                                    for idx, val in enumerate(itemDict['PLACE_list']):
+                                        if idx < 5:
+                                            placeString = pipeDelimeter(placeString, val)
+                                    itemDict['PLACE'] = placeString
+                                elif code == '655':
+                                        # try: 
+                                    if itemDict['FORMAT'].count('|') > 4:
+                                        print(itemDict['FORMAT'])
+                                        # except:
+                                    else: 
+                                        for value in record.findall('subfield'): 
+                                            if value.get('code') == 'a':
+                                                valueText = value.text.strip('.,')
+                                                if valueText not in itemDict['FORMAT_list']: 
+                                                    itemDict['FORMAT_list'].append(valueText)
+                                        formatString = ''
+                                        for val in itemDict['FORMAT_list']:
+                                            try:
+                                                parenDex = val.index('(')
+                                                firstCharAfter = val[parenDex + 1]
+                                                if firstCharAfter.islower():
+                                                    val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
+                                            except:
+                                                a = True
+                                            formatString = pipeDelimeter(formatString, val)
+                                        itemDict['FORMAT'] = formatString
+                                elif code == '710':
+                                    if root[0].find("record/leader").text[7] == 'c':
+                                        for value in record.findall('subfield'): 
+                                            if value.get('code') == 'a':
+                                                itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text
+                                # else:
+                                    # print("code not in crosswalk; code: " + str(code) + ";" )
+                            # link to crosswalk:
+                            # https://docs.google.com/spreadsheets/d/1etIvF5Vjn1kty51qevsZ9mlWTOl_U9p_iCzWk_WOP9M/edit#gid=1296018796
+                                                    
+                            marcCode = record.get('tag')
+                            valueAssignmentFromCode(record, marcCode)
+                            
+                            if ('PLACE' not in itemDict or len(itemDict['PLACE']) == 0) and len(itemDict['PLACE_list']) > 0: 
+                                itemDict['PLACE'] = resolveList(itemDict['PLACE_list'])
+                            if ('SUBJECTS' not in itemDict or len(itemDict['SUBJECTS']) == 0) and len(itemDict['SUBJECTS_list']) > 0: 
+                                itemDict['SUBJECTS']  = resolveList(itemDict['SUBJECTS_list'])
+                            if ('FORMAT' not in itemDict or len(itemDict['FORMAT']) == 0) and len(itemDict['FORMAT_list']) > 0: 
+                                itemDict['FORMAT']  = resolveList(itemDict['FORMAT_list'])
+                            if 'DATE_SORT' in itemDict and itemDict['DATE_SORT'] != '' and itemDict['STANDARDIZED_RIGHTS'] == '':
+                                lastDate = max(itemDict['DATE_SORT'].split('/'))
+                                curYear = date.today().year
+                                if int(lastDate) >= curYear - 95:
+                                    itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
+                                else: 
+                                    itemDict['STANDARDIZED_RIGHTS'] = 'Copyright Not Evaluated'
+                            elif ('DATE_SORT' not in itemDict or itemDict['DATE_SORT'] == '') and itemDict['STANDARDIZED_RIGHTS'] == '':
+                                itemDict['STANDARDIZED_RIGHTS'] = 'Copyright Not Evaluated'
+                            if itemDict['FILE NAME'].endswith(".mov") or itemDict['FILE NAME'].endswith(".avi") or itemDict['FILE NAME'].endswith(".mp4") or itemDict['FILE NAME'].endswith(".m2t") or itemDict['FILE NAME'].endswith(".m4v"):
+                                itemDict['DCMIType'] = "Moving Image"
+                            elif itemDict['FILE NAME'].endswith(".wav") or  itemDict['FILE NAME'].endswith(".mp3"):
+                                itemDict['DCMIType'] = "Sound"
+                            else:
+                                itemDict['DCMIType'] = i['TYPE'].replace('; ','|').replace(';','|')
+
+                            
+                        del itemDict['SUBJECTS_list']
+                        del itemDict['PLACE_list']
+                        del itemDict['FORMAT_list']
+                        del itemDict['ARCHIVAL_COLLECTION_list']
+                    else: 
+                        rejectObj = {
+                            'UMO ID': i['UMO ID'],
+                            'FILE NAME': i['FILE NAME'],
+                            'BIBID': i['BIBID']
+                        }
+                        rejects.append(rejectObj)
                 else: 
                     rejectObj = {
                         'UMO ID': i['UMO ID'],
@@ -2456,20 +2575,15 @@ for filename in os.listdir(directory):
                         'BIBID': i['BIBID']
                     }
                     rejects.append(rejectObj)
-            else: 
-                rejectObj = {
-                    'UMO ID': i['UMO ID'],
-                    'FILE NAME': i['FILE NAME'],
-                    'BIBID': i['BIBID']
-                }
-                rejects.append(rejectObj)
-            if len(itemDict['FILENAME']) > 0:
-                print(itemDict['FILENAME'])
-                try:
-                    if itemDict['FILENAME'].index(' ') > 0:
-                        junkDrawer.append(dict(itemDict))
-                except ValueError:
-                    items.append(dict(itemDict))
+                try: 
+                    if len(itemDict['FILE NAME']) > 0:
+                        try:
+                            if itemDict['FILE NAME'].index(' ') > 0:
+                                junkDrawer.append(dict(itemDict))
+                        except ValueError:
+                            items.append(dict(itemDict))
+                except KeyError: 
+                    print('no file name; umo = ' + str(i['UMO ID']) + ' ; bibid = ' + str(i['BIBID'])  + 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey )
 
         outputdirectory = './output/'
 
