@@ -1,5 +1,5 @@
 import urllib.request
-import json, csv, re, os
+import json, csv, re, os, sys
 import xml.etree.ElementTree as ET
 from datetime import date
 
@@ -42,7 +42,8 @@ listOfIds = [
     'Conroy_1',
     'f_3923_945',
     'g1409_c6G46_c48_1924',
-    'genealogy_books/midwestmusicians19251926chic',
+    'midwestmusicians19251926chic',
+    'genealogy_books',
     'graff_1470',
     'graff_1471',
     'graff_2767',
@@ -51,13 +52,16 @@ listOfIds = [
     'microfilm_191',
     'mms_287',
     'mms_edwards',
-    'nl_archives_02_01_20_',
+    'mms_everett',
     'photo auto guides',
-    'pullman_scrapbooks/scrapbooks186511111pull_1_0029',
+    'pullman_scrapbooks/scrapbooks186511111pull_1',
     'pullman_scrapbooks/scrapbooks186519111pull_0',
-    'pullman_scrapbooks/scrapbooks186519111pull_0',
+    'pullman_scrapbooks/scrapbooks186519311pull_0',
     'pullman_scrapbooks/scrapbooks186519511pull_0',
     'pullman_scrapbooks/scrapbooks186519611pull_0',
+    'pullman_scrapbooks/scrapbooks186519211pull_0',
+    'pullman_scrapbooks/scrapbooks186519711pull_0',
+    'pullman_scrapbooks/scrapbooks186519811pull_0',
     'ruggles_426',
     'wing_facsimile_zw_883_b381',
     'wing_ms_239',
@@ -73,6 +77,11 @@ listOfIds = [
     'wing_zw_745_s458',
     'wing_zw_883_j4151'
 ]
+
+noBibidsFile = []
+
+with open('noBibids.csv') as nobibidfile:
+    noBibidsList = csv.reader(nobibidfile, delimiter=",")
 
 copyrightStatus = {
     "128920":"Copyright Not Evaluated",
@@ -1936,8 +1945,14 @@ def languageFormatter(value):
 def dateFormatter(dateString):
     dateSort = ''
     dateDisplay = ''
+    # looking for 8-digit dates, take first 4 digits
+    if len(re.findall('[0-9]{8}',dateString)) > 0:
+        dateList = re.findall('[0-9]{8}',dateString)
+        dateList.sort()
+        dateSort = dateList[0][:4] + '/' + dateList[-1][:4]
+        dateDisplay = dateList[0][:4] + '-' + dateList[-1][:4]
     # looking for dates like 1876-1987
-    if len(re.findall('[0-9]{4}\??-[0-9]{4}\??',dateString)) > 0:
+    elif len(re.findall('[0-9]{4}\??-[0-9]{4}\??',dateString)) > 0:
         dateList = re.findall('[0-9]{4}\??-[0-9]{4}\??',dateString)
         dateList.sort()
         dateSort = dateList[0].replace('?', '') + '/' + dateList[-1].replace('?', '')
@@ -1962,17 +1977,26 @@ def dateFormatter(dateString):
     else:
         # looking for dates like 19-- 
         dateList = re.findall('[0-9]{3}-{1}?\??|[0-9]{2}-{2}?\??',dateString)
-        if len(dateList) > 0:
+        if len(dateList) > 0 and dateList != None:
             for d in dateList:   
                 d = d.replace('-','0')
             dateList = dateList.sort()
-            for d in dateList:
+            try:
+                for d in dateList:
+                    if len(dateSort) > 0:
+                        dateSort = dateSort + '/' + d.replace('?', '')
+                        dateDisplay = dateDisplay + '-' + d
+                    else: 
+                        dateSort = d.replace('?', '')
+                        dateDisplay = d
+            except TypeError:
                 if len(dateSort) > 0:
                     dateSort = dateSort + '/' + d.replace('?', '')
                     dateDisplay = dateDisplay + '-' + d
                 else: 
                     dateSort = d.replace('?', '')
                     dateDisplay = d
+                # print(d)
     if 'dateSort' not in locals():
         dateSort = ''
     # removing initial 'd' carefully, since some dates have "december" in them - checking if the character after the 'd' is a number; 
@@ -2204,10 +2228,20 @@ def dashDelimeter(a,b):
         return b
 
 def pipeDelimeter(a,b):
-    if len(a) > 0: 
-        return a + '|' + b
-    else:
-        return b
+    try:
+        if a == b: 
+            return a
+        elif len(a) > 0: 
+            return a + '|' + b
+        else:
+            return b
+    except:
+        with open('./errorfile.txt', mode='r') as f:
+            original_stdout = sys.stdout
+            sys.stdout = f # Change the standard output to the file we created.
+            # print(a)
+            # print(b)
+            sys.stdout = original_stdout # Reset the stand
 
 def concatenator(a,b):
     if len(a) > 0:
@@ -2224,9 +2258,14 @@ def resolveList(value):
             valueString = pipeDelimeter(valueString, val)
     return valueString
 
-directory = r'./cjc/'
+# directory = r'./noPiction/'
+directory = r'./csv_batches/splits/'
+# directory = r'./cjc/'
 for filename in os.listdir(directory):
-    if filename.endswith(".csv"):
+    outputfiles = os.listdir('./output/')
+    outputfilename = 'data_' + filename
+    if filename.endswith(".csv") and outputfilename not in outputfiles:
+    # if filename.endswith("35_chunk_1.csv"):
         print(filename)
 
         # recordList is the unprocessed input data, with emphasis on finding a bibid
@@ -2245,7 +2284,7 @@ for filename in os.listdir(directory):
             for row in csvContent:
                 if count == 0: 
                     header = row
-                if count > 1:
+                if count > 0:
                     rowObj = {}
                     # iterate over row list and assign to matching value in header row
 
@@ -2254,27 +2293,62 @@ for filename in os.listdir(directory):
                     # bibid will be autmatically assigned from any existing bibid field, 
                     # but if it's empty, we can try to take it from catalog link; 
                     # we're accounting for only 2 catalog link structures, not sure if there are more
-                    if rowObj['BIBID'] == '' and rowObj['CATALOG_LINK'] != '' and not rowObj['BIBID'].isdigit():
+                    if 'tif' in rowObj['BIBID']:
+                        print(filename + " ; " + rowObj['UMO ID'] + " ; " )
+                    if rowObj['BIBID'] == '' or not rowObj['BIBID'].isnumeric():
+                        try:
+                            # print('rowobj filename = ' +  rowObj['FILE NAME'])
+                            lookingInNoBibids = next(item for item in noBibidsList if item['FILE NAME'] == rowObj['FILE NAME'])
+                            # print('nobibids umo = ' + lookingInNoBibids['BIBID'])
+                            rowObj['BIBID'] = lookingInNoBibids['BIBID']
+                        except: 
+                            pass
+                            # print('bibid not found in missing bibid file')
+                    if len(rowObj['BIBID']) > 6:
+                        try:
+                            suffixIndex = rowObj['CATALOG_LINK'].index('8805867')
+                            rowObj['BIBID'] = rowObj['BIDID'][:suffixIndex]
+                        except: 
+                            try: 
+                                if rowObj['CATALOG_LINK'][-2:] == '88':
+                                    suffixIndex = rowObj['CATALOG_LINK'].index('88')
+                                    rowObj['BIBID'] = rowObj['BIDID'][:suffixIndex]
+                            except:
+                                pass 
+                                # print(rowObj['BIBID'])
+                    if ( rowObj['BIBID'] == '' or not rowObj['BIBID'].isnumeric() ) and rowObj['CATALOG_LINK'] != '' :
                         try: 
                             urlBibidIdx = rowObj['CATALOG_LINK'].index('BBRecID=') + 8
                             rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:]
                         except:
                             try:
-                                urlBibidIdx = rowObj['CATALOG_LINK'].index('bibId=')  + 6
-                                rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:]
+                                urlBibidIdx = rowObj['CATALOG_LINK'].index('bibId=') + 6
+                                rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:urlBibidIdx + 6]
                             except:
-                                try: 
-                                    urlBibidIdxEnd = rowObj['CATALOG_LINK'].index('8805867')
-                                    urlBibidIdxStart = rowObj['CATALOG_LINK'].index('99') + 2
-                                    rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdxStart:urlBibidIdx]
+                                try:
+                                    urlBibidIdx = rowObj['CATALOG_LINK'].index('Pwebrecon.cgi?BBID=') + 19
+                                    rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:urlBibidIdx + 6]
                                 except:
                                     try:
-                                         if rowObj['CATALOG_LINK'].isdigit(): 
-                                             rowObj['BIBID'] = rowObj['CATALOG_LINK'].strip('.0')
+                                        urlBibidIdx = rowObj['CATALOG_LINK'].index('alma99') + 6
+                                        rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdx:urlBibidIdx + 6]
                                     except:
-                                        rejects.append(rowObj)
-                                        rejectCount += 1
-                                        print(rowObj['UMO ID'] + ': no bib id')
+                                        try: 
+                                            urlBibidIdxEnd = rowObj['CATALOG_LINK'].index('8805867')
+                                            urlBibidIdxStart = rowObj['CATALOG_LINK'].index('99') + 2
+                                            rowObj['BIBID'] = rowObj['CATALOG_LINK'][urlBibidIdxStart:urlBibidIdx]
+                                        except:
+                                            try:
+                                                if rowObj['CATALOG_LINK'].isdigit(): 
+                                                    rowObj['BIBID'] = rowObj['CATALOG_LINK'].strip('.0')
+                                            except:
+                                                try: 
+                                                    if (len(rowObj['BIBID']) == 8  and str(rowObj['BIBID'])[-2:] == 88) or (rowObj['BIBID'].index('8805867') == 6):
+                                                        rowObj['BIBID'] = rowObj['BIDID'][:6]
+                                                except:
+                                                    rejects.append(rowObj)
+                                                    rejectCount += 1
+                                                    # print(rowObj['UMO ID'] + ': no bib id')
                     rowObj['BIBID'] = rowObj['BIBID'].replace('/t','').replace('	','').replace(' ','').replace('.jpg','').replace('.0','').replace('.','')
                     recordList.append(rowObj)
                 count += 1
@@ -2282,27 +2356,34 @@ for filename in os.listdir(directory):
 
         for i in recordList:
             itemDict = {}
-            keepGoing = True
-            # for a in listOfIds:
-            #     if a in i['FILE NAME']:
-            #         keepGoing = True
+            # keepGoing = True # toggle this for sample sets
+            keepGoing = False
+            for a in listOfIds:
+                if a in i['FILE NAME']:
+                    # print(a)
+                    keepGoing = True
             if keepGoing: 
                 alreadyDoneIndex = next((index for (index, d) in enumerate(items) if len(items) > 0 and 'BIBID' in d and d['BIBID'] == i['BIBID']), None)
                 if alreadyDoneIndex != None:
                     # print(i['BIBID'] + ' already done, reusing...')
-                    itemDict = items[alreadyDoneIndex]
+                    itemDict = dict(items[alreadyDoneIndex])
                     # have to make sure we're not reusing the filename too
-                    itemDict['FILE NAME'] = i['FILE NAME']
+                    itemDict['FILENAME'] = i['FILE NAME']
                 
                 elif i['BIBID'] != '':
+                    print(i['FILE NAME'])
+                    # sample url: https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=998600358805867&view=full&expand=None&apikey=l8xx1a3af9fadca94b11b092e8b53962974d
                     itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
-                    itemData = urllib.request.urlopen(itemUrl)
-                    parsedXml = ET.parse(itemData)
-                    root = parsedXml.getroot()
+                    print(itemUrl)
+                    try: 
+                        itemData = urllib.request.urlopen(itemUrl)
+                        parsedXml = ET.parse(itemData)
+                        root = parsedXml.getroot()
+                    except: 
+                        root = ''
                     if len(root) > 0:
-                        print(itemUrl)
                         itemDict['BIBID'] = i['BIBID']
-                        itemDict['FILE NAME'] = i['FILE NAME']
+                        itemDict['FILENAME'] = i['FILE NAME']
                         itemDict['TITLE'] = '' if root[0].find('title') is None else titleFormatter(root[0].find('title').text)
                         itemDict['CATALOG_LINK'] = 'https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99' + str(i['BIBID']) + '8805867'
                         itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
@@ -2311,9 +2392,9 @@ for filename in os.listdir(directory):
                         itemDict['piction_PROJECT'] = pictionProject(i['PROJECT'])
                         itemDict['piction_INTERNALNOTES'] = i['INTERNALNOTES']
                         # DCMI type
-                        if itemDict['FILE NAME'].endswith(".mov") or itemDict['FILE NAME'].endswith(".avi") or itemDict['FILE NAME'].endswith(".mp4") or itemDict['FILE NAME'].endswith(".m2t") or itemDict['FILE NAME'].endswith(".m4v"):
+                        if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
                             itemDict['DCMIType'] = "Moving Image"
-                        elif itemDict['FILE NAME'].endswith(".wav") or  itemDict['FILE NAME'].endswith(".mp3"):
+                        elif itemDict['FILENAME'].endswith(".wav") or  itemDict['FILENAME'].endswith(".mp3"):
                             itemDict['DCMIType'] = "Sound"
                         else:
                             itemDict['DCMIType'] = i['TYPE'].replace('; ','|').replace(';','|')
@@ -2362,7 +2443,7 @@ for filename in os.listdir(directory):
 
                         for record in root[0].find('record'):
                             def valueAssignmentFromCode(record,code):
-                                if code == '008' or code == '041':
+                                if code == '008' or code == '041': # language
                                     if code == '008' and itemDict['LANGUAGE'] == '':
                                         itemDict['LANGUAGE'] = languageFormatter(record.text)
                                     else:
@@ -2372,7 +2453,7 @@ for filename in os.listdir(directory):
                                                 langString = languageFormatter(value.text)
                                                 langString = pipeDelimeter(itemDict['LANGUAGE'], langString)
                                         itemDict['LANGUAGE'] = langString
-                                elif code == '045':
+                                elif code == '045': # date
                                     dateString = ''
                                     for value in record.findall('subfield'): 
                                         if dateString == '':
@@ -2382,31 +2463,31 @@ for filename in os.listdir(directory):
                                     dateList = dateFormatter(dateString)
                                     itemDict['DATE_DISPLAY'] = dateList[0]
                                     itemDict['DATE_SORT'] = dateList[1]
-                                elif code == '090' or code == '099' or code == '852': 
+                                elif code == '090' or code == '099' or code == '852': # call number
                                     for value in record.findall('subfield'):
                                         if value.get('code').isalpha():
                                             itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
-                                elif code == '100' or code == '110': 
+                                elif code == '100' or code == '110': # creator
                                     for value in record.findall('subfield'): 
                                         code = value.get('code')
                                         if code != 'e' and code.isalpha():
                                             # remove trailing . and ,
-                                            valueText = value.text.strip(',. ')
-                                            itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], valueText)
-                                elif code == '245': 
+                                            # valueText = value.text.strip(',. ')
+                                            itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], value.text).strip(',. ')
+                                elif code == '245': # title, archival collection
                                     returnValue = ''
                                     for value in record.findall('subfield'): 
                                         code = value.get('code')
                                         if code not in 'cgh':
                                             if code == 'a':
-                                                itemDict['ARCHIVAL_COLLECTION_list']['1'] = value.text.strip('.,')
+                                                itemDict['ARCHIVAL_COLLECTION_list']['1'] = value.text.strip('.,').replace('. /','')
                                             returnValue = concatenator(returnValue, value.text)
                                     itemDict['TITLE'] = titleFormatter(returnValue)
-                                elif code == '260':
+                                elif code == '260': # publisher, date
                                     for value in record.findall('subfield'): 
                                         code = value.get('code')
                                         if code == 'b':
-                                            itemDict['PUBLISHER'] = value.text
+                                            itemDict['PUBLISHER'] = value.text.strip(',[]')
                                         if code == 'c':
                                             dateValue = value.text
                                             patternIsHyphen = re.match("([0-9]{4})-([0-9]{4})",dateValue)
@@ -2418,15 +2499,15 @@ for filename in os.listdir(directory):
                                                 dateList = dateFormatter(value.text)
                                                 itemDict['DATE_DISPLAY'] = dateList[0]
                                                 itemDict['DATE_SORT'] = dateList[1]
-                                elif code == '300':
+                                elif code == '300': # format extent
                                     for value in record.findall('subfield'): 
                                         valueText = value.text.replace(' cm.', ' cm').replace(' mm.', ' mm')
                                         itemDict['FORMAT_EXTENT'] = concatenator(itemDict['FORMAT_EXTENT'], valueText)
-                                elif code == '500': 
+                                elif code == '500': # description
                                     for value in record.findall('subfield'): 
                                         if value.get('code') == 'a':
                                             itemDict['DESCRIPTION'] = value.text
-                                elif code == '520':
+                                elif code == '520': # summary
                                     valueObj = {
                                         'a': '',
                                         'b': ''
@@ -2439,11 +2520,11 @@ for filename in os.listdir(directory):
                                         # concat both but if there's only b or only a we strip out spaces at the front and end
                                         itemDict['SUMMARY'] = valueObj['a'] + ' ' +  valueObj['b'] 
                                         itemDict['SUMMARY'] = itemDict['SUMMARY'].strip(' ')
-                                elif code == '545':
+                                elif code == '545': # bio/hist note
                                     for value in record.findall('subfield'):
                                         if value.get('code') == 'a' or value.get('code') == 'b':
                                             itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = value.text 
-                                elif code == '610' or code == '650':
+                                elif code == '610' or code == '650': # subject, place, format
                                     # using a, x, y subfields for subject and then using/supplimenting place with z
                                     subjectDict = {
                                         'a': '',
@@ -2454,7 +2535,11 @@ for filename in os.listdir(directory):
                                     }
                                     # pushing values into a list 
                                     for value in record.findall('subfield'): 
-                                        valueText = value.text.strip(',.')
+                                        try: 
+                                            valueText = value.text.strip(',.')
+                                        except: 
+                                            pass
+                                            # print(value.text)
                                         code = value.get('code')
                                         if code == 'a': subjectDict['a'] = valueText
                                         elif code == 'v': subjectDict['v'] = dashDelimeter(subjectDict['v'], valueText)
@@ -2472,7 +2557,7 @@ for filename in os.listdir(directory):
                                     if subjectDict['v'] not in itemDict['FORMAT_list'] and len(subjectDict['v']) > 0:
                                         itemDict['FORMAT_list'].append(subjectDict['v'])
                                         itemDict['FORMAT_list'] = sorted(itemDict['FORMAT_list'])
-                                elif code == '651':
+                                elif code == '651': # place
                                     for value in record.findall('subfield'): 
                                         if value.get('code') == 'a':
                                             valueText = value.text
@@ -2488,6 +2573,22 @@ for filename in os.listdir(directory):
                                                 valueText = 'West Germany--' + valueText[:-15]
                                             if '(Germany)' in valueText:
                                                 valueText = 'Germany--' + valueText[:-10]
+                                                
+                                            if valueText == 'Michoacán de Ocampo (Mexico)':
+                                                valueText = 'Mexico--Michoacán de Ocampo'
+                                            if valueText == 'Dapitan (Philippines)':
+                                                valueText = 'Philippines--Dapitan'
+                                            if valueText == 'Washington (Iowa)':
+                                                valueText = 'Iowa--Washington'
+                                            if valueText == 'Tulancingo (Hidalgo, Mexico)':
+                                                valueText = 'Mexico--Tulancingo (Hidalgo)'
+                                            if valueText == 'Coyoacán (Mexico)':
+                                                valueText = 'Mexico--Coyoacán (Mexico City)'
+                                            if valueText == 'Colorado River Valley (Colo.-Mexico)':
+                                                valueText = 'North America--Colorado River Valley'
+                                            if valueText == 'Southwark (London, England)':
+                                                valueText = 'England--London--Southwark'
+
                                             if valueText not in itemDict['PLACE_list']: 
                                                 itemDict['PLACE_list'].append(valueText)
                                         elif value.get('code') == 'v':
@@ -2499,15 +2600,12 @@ for filename in os.listdir(directory):
                                         if idx < 5:
                                             placeString = pipeDelimeter(placeString, val)
                                     itemDict['PLACE'] = placeString
-                                elif code == '655':
+                                elif code == '655': # format
                                         # try: 
-                                    if itemDict['FORMAT'].count('|') > 4:
-                                        print(itemDict['FORMAT'])
-                                        # except:
-                                    else: 
+                                    if itemDict['FORMAT'].count('|') <= 4:
                                         for value in record.findall('subfield'): 
                                             if value.get('code') == 'a':
-                                                valueText = value.text.strip('.,')
+                                                valueText = value.text.strip(',') if value.text.endswith('etc.') else value.text.strip('.,')
                                                 if valueText not in itemDict['FORMAT_list']: 
                                                     itemDict['FORMAT_list'].append(valueText)
                                         formatString = ''
@@ -2518,10 +2616,10 @@ for filename in os.listdir(directory):
                                                 if firstCharAfter.islower():
                                                     val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
                                             except:
-                                                a = True
+                                                pass
                                             formatString = pipeDelimeter(formatString, val)
                                         itemDict['FORMAT'] = formatString
-                                elif code == '710':
+                                elif code == '710': # archival collection
                                     if root[0].find("record/leader").text[7] == 'c':
                                         for value in record.findall('subfield'): 
                                             if value.get('code') == 'a':
@@ -2549,22 +2647,26 @@ for filename in os.listdir(directory):
                                     itemDict['STANDARDIZED_RIGHTS'] = 'Copyright Not Evaluated'
                             elif ('DATE_SORT' not in itemDict or itemDict['DATE_SORT'] == '') and itemDict['STANDARDIZED_RIGHTS'] == '':
                                 itemDict['STANDARDIZED_RIGHTS'] = 'Copyright Not Evaluated'
-                            if itemDict['FILE NAME'].endswith(".mov") or itemDict['FILE NAME'].endswith(".avi") or itemDict['FILE NAME'].endswith(".mp4") or itemDict['FILE NAME'].endswith(".m2t") or itemDict['FILE NAME'].endswith(".m4v"):
+                            if itemDict['STANDARDIZED_RIGHTS'] == 'Not In Copyright - United States':
+                                itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
+                            if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
                                 itemDict['DCMIType'] = "Moving Image"
-                            elif itemDict['FILE NAME'].endswith(".wav") or  itemDict['FILE NAME'].endswith(".mp3"):
+                            elif itemDict['FILENAME'].endswith(".wav") or  itemDict['FILENAME'].endswith(".mp3"):
                                 itemDict['DCMIType'] = "Sound"
                             else:
                                 itemDict['DCMIType'] = i['TYPE'].replace('; ','|').replace(';','|')
+                                if itemDict['DCMIType'] == 'text':
+                                    itemDict['DCMIType'] = 'Text'
 
-                            
                         del itemDict['SUBJECTS_list']
                         del itemDict['PLACE_list']
                         del itemDict['FORMAT_list']
                         del itemDict['ARCHIVAL_COLLECTION_list']
+
                     else: 
                         rejectObj = {
                             'UMO ID': i['UMO ID'],
-                            'FILE NAME': i['FILE NAME'],
+                            'FILENAME': i['FILE NAME'],
                             'BIBID': i['BIBID']
                         }
                         rejects.append(rejectObj)
@@ -2576,24 +2678,25 @@ for filename in os.listdir(directory):
                     }
                     rejects.append(rejectObj)
                 try: 
-                    if len(itemDict['FILE NAME']) > 0:
+                    if len(itemDict['FILENAME']) > 0:
                         try:
-                            if itemDict['FILE NAME'].index(' ') > 0:
+                            if itemDict['FILENAME'].index(' ') > 0:
                                 junkDrawer.append(dict(itemDict))
                         except ValueError:
                             items.append(dict(itemDict))
                 except KeyError: 
-                    print('no file name; umo = ' + str(i['UMO ID']) + ' ; bibid = ' + str(i['BIBID'])  + 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey )
+                    pass
+                    # print('no file name; umo = ' + str(i['UMO ID']) + ' ; bibid = ' + str(i['BIBID'])  + 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey )
 
         outputdirectory = './output/'
 
         dataFilename = 'data_'  + filename
 
-        dataFile = open(outputdirectory + 'json_' + dataFilename + '.json', "w")
-        dataFile.write(json.dumps(items, indent=4))
 
         print("length of item array: " + str(len(items)))
         if len(items) > 0:
+            dataFile = open(outputdirectory + 'json_' + dataFilename + '.json', "w")
+            dataFile.write(json.dumps(items, indent=4))
             keys = items[0].keys()
             with open(outputdirectory + dataFilename, 'w', newline='')  as output_file:
                 dict_writer = csv.DictWriter(output_file, keys)
