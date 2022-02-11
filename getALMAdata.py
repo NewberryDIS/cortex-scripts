@@ -2,11 +2,14 @@ import urllib.request
 import json, csv, re, os, sys
 import xml.etree.ElementTree as ET
 from datetime import date
+import requests
+import config
+from pprint import pprint as pp
 
 curYear = date.today().year
 
 # redact api key before pushing
-apikey = 'xxx'
+apikey = config.apiKey
 
 reviewSet = []
 
@@ -671,24 +674,84 @@ def resolveList(value):
             valueString = pipeDelimeter(valueString, val)
     return valueString
 
-# input should be a csv with bibids and  should be a folder with any number of csv files, formatted as bibid,filename
 
-inputFile = sys.argv[1]
+def get_bibid_dict(filename):
+    # pp(filename)
+    d = {}
+    d['BIBID'] = ''
+    d['FILENAME'] = ''
+    try:
+        bibid = filename.split('_')[0]
+        d['BIBID'] = bibid
+        original_filename = filename.replace(bibid + '_', '')
+        d['FILENAME'] = original_filename
+    except Exception as e:
+        pp(d)
+        return d
+    
+    return d
 
-# originally recordlist was made to confirm bibids were present and find them if absent - this can probably be refactored but I don't think it makes much difference
+######   Old        
+# # input should be a csv with bibids and  should be a folder with any number of csv files, formatted as bibid,filename
+
+# inputFile = sys.argv[1]
+
+# # originally recordlist was made to confirm bibids were present and find them if absent - this can probably be refactored but I don't think it makes much difference
+# recordList = []
+
+# with open(inputFile, mode='r') as infile:
+#     csvContent = csv.reader(infile, delimiter=",")
+#     for row in csvContent:
+#         # ignore (first) row if it's a header; assume 0,1 order; 
+#         if "BIBID" not in row:
+#             rowObj = {
+#                 "BIBID": row[0],
+#                 "FILENAME": row[1]
+#             } 
+#             recordList.append(rowObj)
+#         # master array of item objects; the final output of the script
+######   Old   
+
+
+# Run through stacking rule folders in Cortex and pull recent ingests
+authenticate_url = f'https://collections.newberry.org/API/Authentication/v1.0/Login?Login={config.username}&Password={config.password}&format=json'
+authenticate = requests.get(authenticate_url)
+
+token = authenticate.json()
+token = token['APIResponse']['Token']
+token = f'&token={token}'
+json_suffix = '&format=json'
+# pp(prefix)
+    
+# page_count = 0
 recordList = []
+folders = ['NL1N1GC', 'NL1N3WF', 'NL1N909', 'NL1N3W9']
+for folder in folders:
+    url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle{token}{json_suffix}'
+    # pp(url)
+    get_folder = requests.get(url)
+    folder_response = get_folder.json()
+    # pp(folder_response)
+    total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
+    # pp(folder_response['APIResponse'].keys())
+    items = folder_response['APIResponse']['Items']
+    for item in items:
+        bibid_dict = get_bibid_dict(item['OriginalFilename'])
+        recordList.append(bibid_dict)
+    nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
+    # pp(folder_response['APIResponse']['GlobalInfo'])
+    while nextPage != None:
+        # page_count += 1
+        # pp(page_count)
+        get_folder = requests.get(f'{nextPage["href"]}{json_suffix}')
+        folder_response = get_folder.json()
+        for item in folder_response['APIResponse']['Items']:
+            bibid_dict = get_bibid_dict(item['OriginalFilename'])
+            recordList.append(bibid_dict)
+        nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
 
-with open(inputFile, mode='r') as infile:
-    csvContent = csv.reader(infile, delimiter=",")
-    for row in csvContent:
-        # ignore (first) row if it's a header; assume 0,1 order; 
-        if "BIBID" not in row:
-            rowObj = {
-                "BIBID": row[0],
-                "FILENAME": row[1]
-            } 
-            recordList.append(rowObj)
-        # master array of item objects; the final output of the script
+# pp(recordList)
+
 items = []
 
 for i in recordList:
@@ -702,7 +765,7 @@ for i in recordList:
         # copy entire item
         itemDict = dict(items[alreadyDoneIndex])
         # change filename in new one 
-        itemDict['FILENAME'] = i['FILE NAME']
+        itemDict['FILENAME'] = i['FILENAME']
     # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
     else: 
         # using length to if bibid already has the 99/8805867 pre- and suffix 
@@ -1102,13 +1165,13 @@ for i in recordList:
 
     # outputdirectory = './20211111-ingest/op/'
 
-dataFilename = 'data_'  + inputFile
+dataFilename = 'data_recent_uploads.csv'
 
 
 print("length of item array: " + str(len(items)))
 if len(items) > 0:
     keys = items[0].keys()
-    with open(dataFilename, 'w', newline='')  as output_file:
+    with open(dataFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(items)
@@ -1120,7 +1183,7 @@ if len(reviewSet) > 0:
     dataFile.write(json.dumps(reviewSet, indent=4))
     keys = reviewSet[0].keys()
     reviewFilename = 'review_' + dataFilename
-    with open(reviewFilename, 'w', newline='')  as output_file:
+    with open(reviewFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(reviewSet)
