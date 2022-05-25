@@ -5,8 +5,12 @@ from datetime import date
 import requests
 import config
 from pprint import pprint as pp
+import time
+
+start = time.time()
 
 curYear = date.today().year
+today = str(date.today())
 
 # redact api key before pushing
 apikey = config.apiKey
@@ -532,6 +536,19 @@ def languageFormatter(value):
     # elif "zxx" in value: return "No linguistic content"
     elif "zza" in value: return "Zaza"
 
+
+def strip_bibid(bibid):
+    if len(bibid) < 8:
+        return bibid
+    else:
+        r = r'^99([0-9]*)8805867'
+        bibid_search = re.findall(r, bibid)
+        try:
+            return bibid_search[0]
+        except IndexError:
+            return bibid
+
+
 # parsing dates from raw value
 def dateFormatter(dateString):
     dateSort = ''
@@ -679,7 +696,7 @@ def get_bibid_dict(filename):
     # pp(filename)
     d = {}
     d['BIBID'] = ''
-    d['FILENAME'] = ''
+    d['FILENAME'] = ''    
     try:
         bibid = filename.split('_')[0]
         d['BIBID'] = bibid
@@ -725,7 +742,10 @@ json_suffix = '&format=json'
     
 # page_count = 0
 recordList = []
-folders = ['NL1N1GC', 'NL1N3WF', 'NL1N909', 'NL1N3W9']
+# folders = ['NL1N1GC', 'NL1N3WF', 'NL1N909', 'NL1N3W9'] # Stacking rule folders
+# folders = ['NL1OXIB']
+# folders = ['NL1OXIA'] # Stacking rule folders NL1N1GC
+folders = ['NL1OXHS'] # NL1OXHN
 for folder in folders:
     url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle{token}{json_suffix}'
     # pp(url)
@@ -752,8 +772,8 @@ for folder in folders:
 
 # pp(recordList)
 
-items = []
 
+items = []
 for i in recordList:
     # this particular item's data; will be pushed into items
     itemDict = {} 
@@ -765,7 +785,7 @@ for i in recordList:
         # copy entire item
         itemDict = dict(items[alreadyDoneIndex])
         # change filename in new one 
-        itemDict['FILENAME'] = i['FILENAME']
+        itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
     # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
     else: 
         # using length to if bibid already has the 99/8805867 pre- and suffix 
@@ -784,17 +804,22 @@ for i in recordList:
 
         # if the data returned has a root value, we continue; if it doesn't, it's dumped into the reject pile
         if len(root) > 0:
-            itemDict['BIBID'] = i['BIBID']
-            itemDict['FILENAME'] = i['FILENAME']
+
+            itemDict['BIBID'] = strip_bibid(i['BIBID'])
+            itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
             itemDict['TITLE'] = '' if root[0].find('title') is None else titleFormatter(root[0].find('title').text)
             # same length test as above
+            # if len(i['BIBID']) > 8: 
+            #     itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma' + str(i['BIBID']) + '">View record</a>'
+            # else: 
+            #     itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99' + str(i['BIBID']) + '8805867">View record</a>'
             if len(i['BIBID']) > 8: 
-                itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma' + str(i['BIBID']) + '">View record</a>'
+                itemDict['CATALOG_LINK'] = f"<a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma{str(i['BIBID'])}'' target='_blank'>View record</a>"
             else: 
-                itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99' + str(i['BIBID']) + '8805867">View record</a>'
+                itemDict['CATALOG_LINK'] = f"<a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99{str(i['BIBID'])}8805867' target='_blank'>View record</a>"           
             itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
-            itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions'>these terms and conditions.</a>"
-            itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf'>More information</a>"
+            itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions' target='_blank'>these terms and conditions.</a>"
+            itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
             # DCMI type
             # hard coding video and audio; everything else is text
             if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
@@ -835,6 +860,7 @@ for i in recordList:
             itemDict['TRANSCRIPTION'] = ''
             itemDict['CITATION'] = ''
             itemDict['IN_COPYRIGHT'] = ''
+            itemDict['PURPOSE'] = 'Public'
 
             for record in root[0].find('record'):
                 def valueAssignmentFromCode(record,code):
@@ -889,10 +915,34 @@ for i in recordList:
                             itemDict['DATE_SORT'] = dateList[1] 
                             if 'STANDARDIZED_RIGHTS' not in itemDict or itemDict['STANDARDIZED_RIGHTS'] == '':
                                 itemDict['STANDARDIZED_RIGHTS'] = dateList[3]
-                    elif code == '090' or code == '099' or code == '852': # call number
+                    elif code == '090' and len(itemDict['CALL_NUMBER']) == 0: # call number
                         for value in record.findall('subfield'):
                             if value.get('code').isalpha():
-                                itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                                if value.get('code') != 't' or value.get('code') != 'z' or value.get('code') != '9LOCAL':
+                                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                                    pp(itemDict['CALL_NUMBER'])
+                    elif code == '852' and len(itemDict['CALL_NUMBER']) == 0: # call number
+                        for value in record.findall('subfield'):
+                            if value.get('code').isalpha():
+                                if value.get('code') not in 'kbt':
+                                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                                    pp(itemDict['CALL_NUMBER'])
+                    elif code == '099' and len(itemDict['CALL_NUMBER']) == 0: # call number
+                        for value in record.findall('subfield'):
+                            if value.get('code').isalpha():
+                                if value.get('code') != '9' or value.get('code') != '9LOCAL':
+                                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                                    pp(itemDict['CALL_NUMBER'])
+                    elif code == '710' and len(itemDict['CALL_NUMBER']) == 0: # call number
+                        for value in record.findall('subfield'):
+                            if value.get('code') != None:
+                                if value.get('code') == 'n':
+                                    if value.text[-1] == '.':
+                                        value = value.text.strip('.')
+                                    else:
+                                        value = value.text
+                                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value)
+                                    pp(itemDict['CALL_NUMBER'])
                     elif code == '100' or code == '110': # creator
                         for value in record.findall('subfield'): 
                             code = value.get('code')
@@ -1160,12 +1210,14 @@ for i in recordList:
             del itemDict['ARCHIVAL_COLLECTION_list']
             reviewSet.append(itemDict)
             
-       
-    items.append(dict(itemDict))
+    if len(item) > 0:   
+        items.append(dict(itemDict))
 
     # outputdirectory = './20211111-ingest/op/'
 
-dataFilename = 'data_recent_uploads.csv'
+# pp(items[0])
+pp(items)
+dataFilename = f'Central_{today}_data_recent_uploads.csv'
 
 
 print("length of item array: " + str(len(items)))
@@ -1187,3 +1239,9 @@ if len(reviewSet) > 0:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(reviewSet)
+
+
+end = time.time()
+totalIterationTime = end - start
+totalIterationTime = totalIterationTime / 60
+pp(f'Time to download metadata (mins): {totalIterationTime}')
