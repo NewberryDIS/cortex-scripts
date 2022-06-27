@@ -17,6 +17,53 @@ apikey = config.apiKey
 
 reviewSet = []
 
+
+def set_dict():
+    itemDict = {}
+    itemDict['FILENAME'] = ''
+    itemDict['BIBID'] = ''
+    itemDict['TITLE'] = ''
+    itemDict['CREATOR'] = ''
+    itemDict['PUBLISHER_ORIGINAL'] = ''
+    itemDict['CALL_NUMBER'] = ''
+    itemDict['FORMAT_EXTENT'] = ''
+    itemDict['DESCRIPTION'] = ''
+    itemDict['LANGUAGE'] = ''
+    itemDict['SUBJECTS'] = ''
+    itemDict['PLACE'] = ''
+    itemDict['FORMAT'] = ''
+    itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = ''
+    itemDict['SUMMARY'] = ''
+    itemDict['DATE_DISPLAY'] = ''
+    itemDict['DATE_SORT'] = ''
+    itemDict['STANDARDIZED_RIGHTS'] = ''
+    itemDict['ARCHIVAL_COLLECTION'] = ''
+    itemDict['ARCHIVAL_COLLECTION_list'] = {
+                '1': '',
+                '2': ''
+            }
+    itemDict['SUBJECTS_list'] = []
+    itemDict['PLACE_list'] = []
+    itemDict['FORMAT_list'] = []
+    # will not be filled by this script:
+    itemDict['DATE_DIGITAL'] = ''
+    itemDict['ACCESS_STMT'] = ''
+    itemDict['TITLE_ALTERNATIVE'] = ''
+    itemDict['CONTRIBUTOR'] = ''
+    itemDict['TRANSCRIPTION'] = ''
+    itemDict['CITATION'] = ''
+    itemDict['IN_COPYRIGHT'] = ''
+    itemDict['PURPOSE'] = 'Public'
+    itemDict['CATALOG_LINK'] = ''
+    itemDict['OA_POLICY'] = ''
+    itemDict['DISCLAIMER_STMT'] = ''
+    itemDict['DCMIType'] = ''
+    itemDict['CONTRIBUTING_INSTITUTION'] = ''
+
+    return itemDict
+
+
+
 # language list taken from some random ISO language list online - not this one specifically but it's probably the same: https://www.loc.gov/standards/iso639-2/php/English_list.php 
 def languageFormatter(value):
     if   "eng" in value: return "English"
@@ -549,6 +596,17 @@ def strip_bibid(bibid):
             return bibid
 
 
+def rearrange_sortDate(date):
+    dates = date.split('-')
+    if len(dates) == 2:
+        if int(dates[0]) > int(dates[1]):
+            # pp(dates[0])
+            # pp(dates[1])
+            date = f'{dates[1]}-{dates[0]}'
+    pp(date)
+    return date
+
+
 # parsing dates from raw value
 def dateFormatter(dateString):
     dateSort = ''
@@ -708,13 +766,124 @@ def get_bibid_dict(filename):
     
     return d
 
+
+def placeFormatter(valueText):
+    if '(Ill.)' in valueText:
+        valueText = 'Illinois--' + valueText[:-7]
+    if '(Chicago, Ill.)' in valueText:
+        valueText = 'Illinois--' + valueText[:-16]
+    if '(Italy)' in valueText:
+        valueText = 'Italy--' + valueText[:-8]
+    if '(France)' in valueText:
+        valueText = 'France--' + valueText[:-9]
+    if '(Brazil)' in valueText:
+        valueText = 'Brazil--' + valueText[:-9]
+    if '(West Germany)' in valueText:
+        valueText = 'West Germany--' + valueText[:-15]
+    if '(Germany)' in valueText:
+        valueText = 'Germany--' + valueText[:-10]
+    if '(Ariz.)' in valueText:
+        valueText = 'Arizona--' + valueText[:-8]
+    if '(Conn.)' in valueText:
+        valueText = 'Connecticut--' + valueText[:-8]
+    if 'Canada, Eastern' in valueText:
+        valueText = 'Eastern Canada'
+    if 'East (U.S.)' in valueText:
+        valueText = 'East United States'
+    if 'Istanbul (Turkey)' in valueText:
+        valueText = 'Turkey--' + valueText[:-9]
+    if '(Philippines)' in valueText:
+        valueText = 'Philippines--' + valueText[:-14]
+    if '(Mexico)' in valueText:
+        valueText = 'Mexico--' + valueText[:-9]
+    if '(Québec)' in valueText:
+        valueText = 'Québec--' + valueText[:-9]
+    if '(Quebec)' in valueText:
+        valueText = 'Québec--' + valueText[:-9]
+    if '(Iowa)' in valueText:
+        valueText = 'Iowa--' + valueText[:-7]
+    if '(London, England)' in valueText:
+        valueText = 'England--London--' + valueText[:-18]
+    if '(Greenland)' in valueText:
+        valueText = 'Greenland--' + valueText[:-12]
+    if '(Calif.)' in valueText:
+        valueText = 'California--' + valueText[:-9]
+    if '(Fla.)' in valueText:
+        valueText = 'Florida--' + valueText[:-7]
+    if '(Ind.)' in valueText:
+        valueText = 'Indiana--' + valueText[:-7]
+    if '(S.D.)' in valueText:
+        valueText = 'South Dakota--' + valueText[:-7]
+    if '(N.Y.)' in valueText:
+        valueText = 'New York--' + valueText[:-7]
+    if '(Vt.)' in valueText:
+        valueText = 'Vermont--' + valueText[:-6]
+    if '(Indianapolis, Ind.)' in valueText:
+        valueText = 'Indiana--Indianapolis--' + valueText[:-21]
+    if valueText == 'Tulancingo (Hidalgo, Mexico)':
+        valueText = 'Mexico--Tulancingo (Hidalgo)'
+    if valueText == 'Coyoacán (Mexico)':
+        valueText = 'Mexico--Coyoacán (Mexico City)'
+    if valueText == 'Colorado River Valley (Colo.-Mexico)':
+        valueText = 'North America--Colorado River Valley'
+    if valueText == 'Arctic regions':
+        valueText = 'Arctic Regions'
+    if valueText == "East (U.S.)" or valueText == "East United States":
+        valueText = "East United States"
+    if valueText == "Canada, Eastern" or valueText == "Eastern Canada":
+        valueText = "Eastern Canada"    
+    if valueText == "Canada, Eastern|East (U.S.)|East United States|Eastern Canada":
+        valueText = "East United States|Eastern Canada"
+    if valueText == "East Indies":
+        valueText = "Asia--East Indies"
+    if valueText == "Hudson River Valley (N.Y. and N.J.)":
+        valueText = "United States--Hudson River Valley"
+    if valueText == "Montréal (Québec)":
+        valueText = "Québec--Montréal"
+    if valueText == "Wabash River Valley":
+        valueText = "United States--Wabash River Valley"
+    if valueText == "Québec (Province)":
+        valueText = "Québec"
+    if valueText == "Mecklenburg (Germany : Region)":
+        valueText = "Germany--Mecklenburg Region"
+    if valueText == "Minnesota--Saint Paul Region|Wisconsin|Saint Paul Region (Minn.)":
+        valueText = "Minnesota--Saint Paul Region|Wisconsin"
+    if valueText == "New York (N.Y.)":
+        valueText = "New York (State)--New York"
+    if valueText == "Northwest Passage":
+        valueText = "Arctic Ocean--Northwest Passage"
+    if valueText == "Parma":
+        valueText = "Italy--Parma"
+    if valueText == "Piacenza":
+        valueText = "Italy--Piacenza"
+    if valueText == "El Arahal (Spain)":
+        valueText = "Spain--El Arahal"
+    if valueText == "Thrace":
+        valueText = "Mediterranean Region--Thrace"
+    if valueText == "Yucatán Peninsula":
+        valueText = "Central America--Yucatán Peninsula"
+    if valueText == "United States Highway 1":
+        valueText = "United States--United States Highway 1"
+    if valueText == "United States Highway 1":
+        valueText = "United States--United States Highway 1"
+    if valueText == "Glacier National Park (Mont.)":
+        valueText = "Montana--Glacier National Park"
+    if valueText == "Mato Grosso (Brazil : State)":
+        valueText = "Brazil--Matto Grosso (State)"
+    if valueText == "Villa Bella (Bolivia)":
+        valueText = "Bolivia--Villa Bella"
+    if valueText == "Southwest, New":
+        valueText = "New Southwest"
+
+    return valueText
+
 ######   Old        
 # # input should be a csv with bibids and  should be a folder with any number of csv files, formatted as bibid,filename
 
 # inputFile = sys.argv[1]
 
-# # originally recordlist was made to confirm bibids were present and find them if absent - this can probably be refactored but I don't think it makes much difference
-# recordList = []
+# # # originally recordlist was made to confirm bibids were present and find them if absent - this can probably be refactored but I don't think it makes much difference
+recordList = []
 
 # with open(inputFile, mode='r') as infile:
 #     csvContent = csv.reader(infile, delimiter=",")
@@ -722,13 +891,13 @@ def get_bibid_dict(filename):
 #         # ignore (first) row if it's a header; assume 0,1 order; 
 #         if "BIBID" not in row:
 #             rowObj = {
-#                 "BIBID": row[0],
+#                 "BIBID": row[0].replace('"', ''),
 #                 "FILENAME": row[1]
 #             } 
 #             recordList.append(rowObj)
 #         # master array of item objects; the final output of the script
 ######   Old   
-
+# pp(recordList)
 
 # Run through stacking rule folders in Cortex and pull recent ingests
 authenticate_url = f'https://collections.newberry.org/API/Authentication/v1.0/Login?Login={config.username}&Password={config.password}&format=json'
@@ -738,16 +907,16 @@ token = authenticate.json()
 token = token['APIResponse']['Token']
 token = f'&token={token}'
 json_suffix = '&format=json'
-# pp(prefix)
+# # pp(prefix)
     
-# page_count = 0
-recordList = []
-# folders = ['NL1N1GC', 'NL1N3WF', 'NL1N909', 'NL1N3W9'] # Stacking rule folders
-# folders = ['NL1OXIB']
-# folders = ['NL1OXIA'] # Stacking rule folders NL1N1GC
-folders = ['NL1OXHS'] # NL1OXHN
+# # page_count = 0
+# recordList = []
+folders = ['NL1N1GC', 'NL1N3WF', 'NL1N3W9', 'NL1N909'] # Stacking rule folders # 'NL1N909',
+# folders = ['NL1N3WF']
+# # folders = ['NL1OXIA'] # Stacking rule folders NL1N1GC
+# folders = ['NL1N1GC'] # NL1OXHN
 for folder in folders:
-    url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle{token}{json_suffix}'
+    url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,Purpose{token}{json_suffix}'
     # pp(url)
     get_folder = requests.get(url)
     folder_response = get_folder.json()
@@ -756,8 +925,10 @@ for folder in folders:
     # pp(folder_response['APIResponse'].keys())
     items = folder_response['APIResponse']['Items']
     for item in items:
-        bibid_dict = get_bibid_dict(item['OriginalFilename'])
-        recordList.append(bibid_dict)
+        if item['Purpose'] != 'Public':
+            if item['OriginalFilename'][:4].isdigit() == True:
+                bibid_dict = get_bibid_dict(item['OriginalFilename'])
+                recordList.append(bibid_dict)
     nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
     # pp(folder_response['APIResponse']['GlobalInfo'])
     while nextPage != None:
@@ -766,8 +937,10 @@ for folder in folders:
         get_folder = requests.get(f'{nextPage["href"]}{json_suffix}')
         folder_response = get_folder.json()
         for item in folder_response['APIResponse']['Items']:
-            bibid_dict = get_bibid_dict(item['OriginalFilename'])
-            recordList.append(bibid_dict)
+            if item['Purpose'] != 'Public':
+                if item['OriginalFilename'][:4].isdigit() == True:
+                    bibid_dict = get_bibid_dict(item['OriginalFilename'])
+                    recordList.append(bibid_dict)
         nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
 
 # pp(recordList)
@@ -776,7 +949,8 @@ for folder in folders:
 items = []
 for i in recordList:
     # this particular item's data; will be pushed into items
-    itemDict = {} 
+    itemDict = set_dict()
+    # pp(itemDict)
             
     # if items already has an item with this bibid in it, then we copy all data from that one, changing only the filename; 
     # this approach becomes problematic in cases like the Akwesasne notes where the bibid may have other changing values, like dates
@@ -785,6 +959,7 @@ for i in recordList:
         # copy entire item
         itemDict = dict(items[alreadyDoneIndex])
         # change filename in new one 
+        # itemDict['FILENAME'] = i['FILENAME']
         itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
     # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
     else: 
@@ -806,6 +981,7 @@ for i in recordList:
         if len(root) > 0:
 
             itemDict['BIBID'] = strip_bibid(i['BIBID'])
+            # itemDict['FILENAME'] = i['FILENAME']
             itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
             itemDict['TITLE'] = '' if root[0].find('title') is None else titleFormatter(root[0].find('title').text)
             # same length test as above
@@ -828,39 +1004,6 @@ for i in recordList:
                 itemDict['DCMIType'] = "Sound"
             else: 
                 itemDict['DCMIType'] = 'Text'
-                
-            itemDict['CREATOR'] = ''
-            itemDict['PUBLISHER_ORIGINAL'] = ''
-            itemDict['CALL_NUMBER'] = ''
-            itemDict['FORMAT_EXTENT'] = ''
-            itemDict['DESCRIPTION'] = ''
-            itemDict['LANGUAGE'] = ''
-            itemDict['SUBJECTS'] = ''
-            itemDict['PLACE'] = ''
-            itemDict['FORMAT'] = ''
-            itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = ''
-            itemDict['SUMMARY'] = ''
-            itemDict['DATE_DISPLAY'] = ''
-            itemDict['DATE_SORT'] = ''
-            itemDict['STANDARDIZED_RIGHTS'] = ''
-            itemDict['ARCHIVAL_COLLECTION'] = ''
-            itemDict['ARCHIVAL_COLLECTION_list'] = {
-                '1': '',
-                '2': ''
-            }
-
-            itemDict['SUBJECTS_list'] = []
-            itemDict['PLACE_list'] = []
-            itemDict['FORMAT_list'] = []
-            # will not be filled by this script:
-            itemDict['DATE_DIGITAL'] = ''
-            itemDict['ACCESS_STMT'] = ''
-            itemDict['TITLE_ALTERNATIVE'] = ''
-            itemDict['CONTRIBUTOR'] = ''
-            itemDict['TRANSCRIPTION'] = ''
-            itemDict['CITATION'] = ''
-            itemDict['IN_COPYRIGHT'] = ''
-            itemDict['PURPOSE'] = 'Public'
 
             for record in root[0].find('record'):
                 def valueAssignmentFromCode(record,code):
@@ -877,6 +1020,7 @@ for i in recordList:
                         if code == '008':
                             if len(re.findall('[0-9]{8}',record.text[7:15])) > 0:
                                 eightdigits = record.text[7:11] + '-' + record.text[11:15]
+                                eightdigits = rearrange_sortDate(eightdigits)
                                 itemDict['DATE_DISPLAY'] = eightdigits
                                 itemDict['DATE_SORT'] = eightdigits.replace('-','/')
                                 if 'STANDARDIZED_RIGHTS' not in itemDict or itemDict['STANDARDIZED_RIGHTS'] == '':
@@ -1038,113 +1182,7 @@ for i in recordList:
                         for value in record.findall('subfield'): 
                             if value.get('code') == 'a':
                                 valueText = value.text
-                                if '(Ill.)' in valueText:
-                                    valueText = 'Illinois--' + valueText[:-7]
-                                if '(Chicago, Ill.)' in valueText:
-                                    valueText = 'Illinois--' + valueText[:-16]
-                                if '(Italy)' in valueText:
-                                    valueText = 'Italy--' + valueText[:-8]
-                                if '(France)' in valueText:
-                                    valueText = 'France--' + valueText[:-9]
-                                if '(Brazil)' in valueText:
-                                    valueText = 'Brazil--' + valueText[:-9]
-                                if '(West Germany)' in valueText:
-                                    valueText = 'West Germany--' + valueText[:-15]
-                                if '(Germany)' in valueText:
-                                    valueText = 'Germany--' + valueText[:-10]
-                                if '(Ariz.)' in valueText:
-                                    valueText = 'Arizona--' + valueText[:-8]
-                                if '(Conn.)' in valueText:
-                                    valueText = 'Connecticut--' + valueText[:-8]
-                                if 'Canada, Eastern' in valueText:
-                                    valueText = 'Eastern Canada'
-                                if 'East (U.S.)' in valueText:
-                                    valueText = 'East United States'
-                                if 'Istanbul (Turkey)' in valueText:
-                                    valueText = 'Turkey--' + valueText[:-9]
-                                if '(Philippines)' in valueText:
-                                    valueText = 'Philippines--' + valueText[:-14]
-                                if '(Mexico)' in valueText:
-                                    valueText = 'Mexico--' + valueText[:-9]
-                                if '(Québec)' in valueText:
-                                    valueText = 'Québec--' + valueText[:-9]
-                                if '(Quebec)' in valueText:
-                                    valueText = 'Québec--' + valueText[:-9]
-                                if '(Iowa)' in valueText:
-                                    valueText = 'Iowa--' + valueText[:-7]
-                                if '(London, England)' in valueText:
-                                    valueText = 'England--London--' + valueText[:-18]
-                                if '(Greenland)' in valueText:
-                                    valueText = 'Greenland--' + valueText[:-12]
-                                if '(Calif.)' in valueText:
-                                    valueText = 'California--' + valueText[:-9]
-                                if '(Fla.)' in valueText:
-                                    valueText = 'Florida--' + valueText[:-7]
-                                if '(Ind.)' in valueText:
-                                    valueText = 'Indiana--' + valueText[:-7]
-                                if '(S.D.)' in valueText:
-                                    valueText = 'South Dakota--' + valueText[:-7]
-                                if '(N.Y.)' in valueText:
-                                    valueText = 'New York--' + valueText[:-7]
-                                if '(Vt.)' in valueText:
-                                    valueText = 'Vermont--' + valueText[:-6]
-                                if '(Indianapolis, Ind.)' in valueText:
-                                    valueText = 'Indiana--Indianapolis--' + valueText[:-21]
-                                if valueText == 'Tulancingo (Hidalgo, Mexico)':
-                                    valueText = 'Mexico--Tulancingo (Hidalgo)'
-                                if valueText == 'Coyoacán (Mexico)':
-                                    valueText = 'Mexico--Coyoacán (Mexico City)'
-                                if valueText == 'Colorado River Valley (Colo.-Mexico)':
-                                    valueText = 'North America--Colorado River Valley'
-                                if valueText == 'Arctic regions':
-                                    valueText = 'Arctic Regions'
-                                if valueText == "East (U.S.)" or valueText == "East United States":
-                                    valueText = "East United States"
-                                if valueText == "Canada, Eastern" or valueText == "Eastern Canada":
-                                    valueText = "Eastern Canada"	
-                                if valueText == "Canada, Eastern|East (U.S.)|East United States|Eastern Canada":
-                                    valueText = "East United States|Eastern Canada"
-                                if valueText == "East Indies":
-                                    valueText = "Asia--East Indies"
-                                if valueText == "Hudson River Valley (N.Y. and N.J.)":
-                                    valueText = "United States--Hudson River Valley"
-                                if valueText == "Montréal (Québec)":
-                                    valueText = "Québec--Montréal"
-                                if valueText == "Wabash River Valley":
-                                    valueText = "United States--Wabash River Valley"
-                                if valueText == "Québec (Province)":
-                                    valueText = "Québec"
-                                if valueText == "Mecklenburg (Germany : Region)":
-                                    valueText = "Germany--Mecklenburg Region"
-                                if valueText == "Minnesota--Saint Paul Region|Wisconsin|Saint Paul Region (Minn.)":
-                                    valueText = "Minnesota--Saint Paul Region|Wisconsin"
-                                if valueText == "New York (N.Y.)":
-                                    valueText = "New York (State)--New York"
-                                if valueText == "Northwest Passage":
-                                    valueText = "Arctic Ocean--Northwest Passage"
-                                if valueText == "Parma":
-                                    valueText = "Italy--Parma"
-                                if valueText == "Piacenza":
-                                    valueText = "Italy--Piacenza"
-                                if valueText == "El Arahal (Spain)":
-                                    valueText = "Spain--El Arahal"
-                                if valueText == "Thrace":
-                                    valueText = "Mediterranean Region--Thrace"
-                                if valueText == "Yucatán Peninsula":
-                                    valueText = "Central America--Yucatán Peninsula"
-                                if valueText == "United States Highway 1":
-                                    valueText = "United States--United States Highway 1"
-                                if valueText == "United States Highway 1":
-                                    valueText = "United States--United States Highway 1"
-                                if valueText == "Glacier National Park (Mont.)":
-                                    valueText = "Montana--Glacier National Park"
-                                if valueText == "Mato Grosso (Brazil : State)":
-                                    valueText = "Brazil--Matto Grosso (State)"
-                                if valueText == "Villa Bella (Bolivia)":
-                                    valueText = "Bolivia--Villa Bella"
-                                if valueText == "Southwest, New":
-                                    valueText = "New Southwest"
-
+                                valueText = placeFormatter(valueText)
                                 itemDict['PLACE_list'].append(valueText.strip(",. "))
                             elif value.get('code') == 'v':
                                 valueText = value.text.strip('.,')
@@ -1203,20 +1241,35 @@ for i in recordList:
                 if itemDict['STANDARDIZED_RIGHTS'] == 'No copyright - United States':
                     itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
 
-                # remove format-helping values
+            # remove format-helping values
             del itemDict['SUBJECTS_list']
             del itemDict['PLACE_list']
             del itemDict['FORMAT_list']
             del itemDict['ARCHIVAL_COLLECTION_list']
             reviewSet.append(itemDict)
             
-    if len(item) > 0:   
-        items.append(dict(itemDict))
+    # if len(item) > 0: 
+    # del itemDict['SUBJECTS_list']
+    # del itemDict['PLACE_list']
+    # del itemDict['FORMAT_list']
+    # del itemDict['ARCHIVAL_COLLECTION_list']
+    # items.append(dict(itemDict))
+    if 'SUBJECTS_list' in itemDict.keys():
+        del itemDict['SUBJECTS_list']
+    if 'ARCHIVAL_COLLECTION_list' in itemDict.keys():
+        del itemDict['ARCHIVAL_COLLECTION_list']
+    if 'PLACE_list' in itemDict.keys():
+        del itemDict['PLACE_list']
+    if 'FORMAT_list' in itemDict.keys():
+        del itemDict['FORMAT_list']
+    # pp(itemDict['DATE_SORT'])
+    items.append(itemDict)
+    pp(itemDict['FILENAME'])
 
     # outputdirectory = './20211111-ingest/op/'
 
 # pp(items[0])
-pp(items)
+# pp(items[0])
 dataFilename = f'Central_{today}_data_recent_uploads.csv'
 
 
