@@ -908,6 +908,8 @@ token = token['APIResponse']['Token']
 token = f'&token={token}'
 json_suffix = '&format=json'
 # # pp(prefix)
+
+pp('Authenticated!')
     
 # # page_count = 0
 # recordList = []
@@ -926,9 +928,9 @@ for folder in folders:
     items = folder_response['APIResponse']['Items']
     for item in items:
         if item['Purpose'] != 'Public':
-            if item['OriginalFilename'][:4].isdigit() == True:
-                bibid_dict = get_bibid_dict(item['OriginalFilename'])
-                recordList.append(bibid_dict)
+            # if item['OriginalFilename'][:4].isdigit() == True:
+            bibid_dict = get_bibid_dict(item['OriginalFilename'])
+            recordList.append(bibid_dict)
     nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
     # pp(folder_response['APIResponse']['GlobalInfo'])
     while nextPage != None:
@@ -938,9 +940,9 @@ for folder in folders:
         folder_response = get_folder.json()
         for item in folder_response['APIResponse']['Items']:
             if item['Purpose'] != 'Public':
-                if item['OriginalFilename'][:4].isdigit() == True:
-                    bibid_dict = get_bibid_dict(item['OriginalFilename'])
-                    recordList.append(bibid_dict)
+                # if item['OriginalFilename'][:4].isdigit() == True:
+                bibid_dict = get_bibid_dict(item['OriginalFilename'])
+                recordList.append(bibid_dict)
         nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
 
 # pp(recordList)
