@@ -877,6 +877,17 @@ def placeFormatter(valueText):
 
     return valueText
 
+
+def add_box_no_to_title(filename, title):
+    box_search = re.findall("box_([0-9]*)",filename)
+    if len(box_search) > 0:
+        box_str = f' [box {box_search[0]}]'
+        title = title.split(',')
+        title = title[0] + box_str + ',' + title[1] 
+        return title
+    else:
+        return title
+
 ######   Old        
 # # input should be a csv with bibids and  should be a folder with any number of csv files, formatted as bibid,filename
 
@@ -913,8 +924,8 @@ pp('Authenticated!')
     
 # # page_count = 0
 # recordList = []
-folders = ['NL1N1GC', 'NL1N3WF', 'NL1N3W9', 'NL1N909'] # Stacking rule folders # 'NL1N909',
-# folders = ['NL1N3WF']
+# folders = ['NL1N1GC', 'NL1N3WF', 'NL1N3W9', 'NL1N909'] # Stacking rule folders # 'NL1N909',
+folders = ['NL1OXIB']
 # # folders = ['NL1OXIA'] # Stacking rule folders NL1N1GC
 # folders = ['NL1N1GC'] # NL1OXHN
 for folder in folders:
@@ -1066,7 +1077,7 @@ for i in recordList:
                             if value.get('code').isalpha():
                                 if value.get('code') != 't' or value.get('code') != 'z' or value.get('code') != '9LOCAL':
                                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
-                                    pp(itemDict['CALL_NUMBER'])
+                                    # pp(itemDict['CALL_NUMBER'])
                     elif code == '852' and len(itemDict['CALL_NUMBER']) == 0: # call number
                         for value in record.findall('subfield'):
                             if value.get('code').isalpha():
@@ -1078,7 +1089,7 @@ for i in recordList:
                             if value.get('code').isalpha():
                                 if value.get('code') != '9' or value.get('code') != '9LOCAL':
                                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
-                                    pp(itemDict['CALL_NUMBER'])
+                                    # pp(itemDict['CALL_NUMBER'])
                     elif code == '710' and len(itemDict['CALL_NUMBER']) == 0: # call number
                         for value in record.findall('subfield'):
                             if value.get('code') != None:
@@ -1088,7 +1099,7 @@ for i in recordList:
                                     else:
                                         value = value.text
                                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value)
-                                    pp(itemDict['CALL_NUMBER'])
+                                    # pp(itemDict['CALL_NUMBER'])
                     elif code == '100' or code == '110': # creator
                         for value in record.findall('subfield'): 
                             code = value.get('code')
@@ -1105,7 +1116,7 @@ for i in recordList:
                                 if code == 'a' and 'Newberry Library' not in value.text:
                                     itemDict['ARCHIVAL_COLLECTION_list']['1'] = value.text.strip('.,').replace('. /','')
                                 returnValue = concatenator(returnValue, value.text)
-                        itemDict['TITLE'] = titleFormatter(returnValue)
+                        itemDict['TITLE'] = add_box_no_to_title(itemDict['FILENAME'],titleFormatter(returnValue))
                     elif code == '260': # PUBLISHER_ORIGINAL, date
                         for value in record.findall('subfield'): 
                             code = value.get('code')
@@ -1267,6 +1278,7 @@ for i in recordList:
     # pp(itemDict['DATE_SORT'])
     items.append(itemDict)
     pp(itemDict['FILENAME'])
+    pp(itemDict['TITLE'])
 
     # outputdirectory = './20211111-ingest/op/'
 
