@@ -6,6 +6,7 @@ import requests
 import config
 from pprint import pprint as pp
 import time
+import argparse
 
 start = time.time()
 
@@ -888,27 +889,17 @@ def add_box_no_to_title(filename, title):
     else:
         return title
 
-######   Old        
-# # input should be a csv with bibids and  should be a folder with any number of csv files, formatted as bibid,filename
 
-# inputFile = sys.argv[1]
 
 # # # originally recordlist was made to confirm bibids were present and find them if absent - this can probably be refactored but I don't think it makes much difference
 recordList = []
 
-# with open(inputFile, mode='r') as infile:
-#     csvContent = csv.reader(infile, delimiter=",")
-#     for row in csvContent:
-#         # ignore (first) row if it's a header; assume 0,1 order; 
-#         if "BIBID" not in row:
-#             rowObj = {
-#                 "BIBID": row[0].replace('"', ''),
-#                 "FILENAME": row[1]
-#             } 
-#             recordList.append(rowObj)
-#         # master array of item objects; the final output of the script
-######   Old   
-# pp(recordList)
+parser = argparse.ArgumentParser()
+parser.add_argument('Cortex_folders', nargs='*', default=['NL1N1GC', 'NL1N3WF', 'NL1N3W9', 'NL1N909'], help='Unique identifier of folder wish to add metadata to assets for')
+args = parser.parse_args()
+folders = args.Cortex_folders
+pp(folders)
+
 
 # Run through stacking rule folders in Cortex and pull recent ingests
 authenticate_url = f'https://collections.newberry.org/API/Authentication/v1.0/Login?Login={config.username}&Password={config.password}&format=json'
@@ -925,7 +916,7 @@ pp('Authenticated!')
 # # page_count = 0
 # recordList = []
 # folders = ['NL1N1GC', 'NL1N3WF', 'NL1N3W9', 'NL1N909'] # Stacking rule folders # 'NL1N909',
-folders = ['NL1OXIB']
+# folders = ['NL1OXHN']
 # # folders = ['NL1OXIA'] # Stacking rule folders NL1N1GC
 # folders = ['NL1N1GC'] # NL1OXHN
 for folder in folders:
