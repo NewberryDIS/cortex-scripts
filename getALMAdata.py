@@ -884,8 +884,12 @@ def add_box_no_to_title(filename, title):
     if len(box_search) > 0:
         box_str = f' [box {box_search[0]}]'
         title = title.split(',')
-        title = title[0] + box_str + ',' + title[1] 
-        return title
+        try:
+            title = title[0] + box_str + ',' + title[1]
+            return title
+        except IndexError:
+            title = title[0] + box_str
+            return title
     else:
         return title
 
