@@ -982,6 +982,7 @@ for i in recordList:
             itemData = urllib.request.urlopen(itemUrl)
             parsedXml = ET.parse(itemData)
             root = parsedXml.getroot()
+            # pp(root)
         except: 
             root = ''
 
@@ -1006,16 +1007,33 @@ for i in recordList:
             itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
             # DCMI type
             # hard coding video and audio; everything else is text
-            if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
-                itemDict['DCMIType'] = "Moving Image"
-            elif itemDict['FILENAME'].endswith(".wav") or  itemDict['FILENAME'].endswith(".mp3"):
-                itemDict['DCMIType'] = "Sound"
-            else: 
-                itemDict['DCMIType'] = 'Text'
+            # if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
+            #     itemDict['DCMIType'] = "Moving Image"
+            # elif itemDict['FILENAME'].endswith(".wav") or  itemDict['FILENAME'].endswith(".mp3"):
+            #     itemDict['DCMIType'] = "Sound"
+            # else: 
+            #     itemDict['DCMIType'] = 'Text'
 
             for record in root[0].find('record'):
+                # pp(record.get('tag'))
                 def valueAssignmentFromCode(record,code):
-                    if code == '008' or code == '041': # language and date (#2)
+                    # DCMIType
+                    if code == None:
+                        type_code = record.text[6]
+                        if type_code == 'g':
+                            itemDict['DCMIType'] = 'Moving Image'
+                        if type_code == 'r':
+                            itemDict['DCMIType'] = 'Physical Object'
+                        if type_code == 'i' or type_code == 'j':
+                            itemDict['DCMIType'] = 'Sound'
+                        if type_code in 'cdefr':
+                            itemDict['DCMIType'] = 'Still Image'
+                        if type_code in 'at':
+                            itemDict['DCMIType'] = 'Text'
+                        if type_code == 'p':
+                            itemDict['DCMIType'] = 'Collection'
+                    # language and date (#2)
+                    if code == '008' or code == '041': 
                         if code == '008' and itemDict['LANGUAGE'] == '':
                             itemDict['LANGUAGE'] = languageFormatter(record.text)
                         else:
@@ -1235,6 +1253,7 @@ for i in recordList:
                 # https://docs.google.com/spreadsheets/d/1etIvF5Vjn1kty51qevsZ9mlWTOl_U9p_iCzWk_WOP9M/edit#gid=1296018796
                                         
                 marcCode = record.get('tag')
+                # pp(marcCode)
                 valueAssignmentFromCode(record, marcCode)
                 
                 # resolving lists created by multiple marc codes
@@ -1274,6 +1293,7 @@ for i in recordList:
     items.append(itemDict)
     pp(itemDict['FILENAME'])
     pp(itemDict['TITLE'])
+    pp(itemDict['DCMIType'])
 
     # outputdirectory = './20211111-ingest/op/'
 
