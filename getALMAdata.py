@@ -746,7 +746,7 @@ def concatenator(a,b):
 def resolveList(value):
     valueString = ''
     for idx, val in enumerate(value):
-        if idx < 5:
+        if idx < 6:
             valueString = pipeDelimeter(valueString, val)
     return valueString
 
@@ -1026,12 +1026,14 @@ for i in recordList:
                             itemDict['DCMIType'] = 'Physical Object'
                         if type_code == 'i' or type_code == 'j':
                             itemDict['DCMIType'] = 'Sound'
-                        if type_code in 'cdefr':
+                        if type_code in 'cedfr':
                             itemDict['DCMIType'] = 'Still Image'
                         if type_code in 'at':
                             itemDict['DCMIType'] = 'Text'
                         if type_code == 'p':
                             itemDict['DCMIType'] = 'Collection'
+                        if type_code == 'e':
+                            itemDict['FORMAT_list'].append('Cartographic materials')
                     # language and date (#2)
                     if code == '008' or code == '041': 
                         if code == '008' and itemDict['LANGUAGE'] == '':
