@@ -119,6 +119,8 @@ if __name__ == '__main__':
 
 
 	fails = []
+	total_count = len(response['values'][1:])
+	count = 0
 	for value in response['values'][1:]:
 		url = value[0]
 		bibid = value[1]
@@ -141,34 +143,35 @@ if __name__ == '__main__':
 			folder_name_2 = folder_name_1.replace('.zip', '')
 
 			try:
+				count += 1
+				start = time.time()
 				with zipfile.ZipFile(f'{folder_name_1}', 'r') as zip_ref:
 					zip_ref.extractall(f'.')
 
 				for file in os.listdir(folder_name_2):
 					new_file_name = bibid + '_' + file
 					os.rename(os.path.join(folder_name_2, file), os.path.join(folder_name_2, new_file_name))
+				end = time.time()
+				total = end = start
+				pp(f"{url} took {total} seconds")
+				remaining = total_count	- count
+				pp(f'{remaining} urls to download')
 			except Exception as e:
 				pp(e)
 				f = {}
-				pp(e)
 				pp(url)
 				f['url'] = value[0]
 				f['bibid'] = value[1]
 				fails.append(f)
 
+	try:
+		keys = fails[0].keys()
+		with open('fails.csv', 'w', encoding='utf-8', errors='ignore', newline='') as outfile:
+			writer = csv.DictWriter(outfile, fieldnames=keys)
+			writer.writeheader()
+			writer.writerows(fails)		
+	except IndexError:
+		pp('No errors')	
 
-	keys = fails[0].keys()
-	with open('fails.csv', 'w', encoding='utf-8', errors='ignore', newline='') as outfile:
-		writer = csv.DictWriter(outfile, fieldnames=keys)
-		writer.writeheader()
-		writer.writerows(fails)		
-
-
-	# # Generate error log
-	# keys = data['rows'][0].keys()
-	# with open('ia_urls_too_big.csv', 'w', newline='', errors='ignore', encoding='utf-8') as outfile:
-	# 	writer = csv.DictWriter(outfile, fieldnames=keys)
-	# 	writer.writeheader()
-	# 	writer.writerows(data['rows'])
 
 	# Because of error stopping script, once everything is ingested, go back and get URLs that were skipped for containing files too big
