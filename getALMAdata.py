@@ -1305,6 +1305,8 @@ for i in recordList:
     if 'FORMAT_list' in itemDict.keys():
         del itemDict['FORMAT_list']
     # pp(itemDict['DATE_SORT'])
+    if itemDict['TITLE'] == '':
+        itemDict['PURPOSE'] = 'Pending process'
     items.append(itemDict)
     pp(itemDict['FILENAME'])
     pp(itemDict['TITLE'])
