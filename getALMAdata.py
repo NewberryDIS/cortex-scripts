@@ -954,6 +954,9 @@ for folder in folders:
 # pp(recordList)
 
 
+# Everett D. Graff Collection
+# 
+
 items = []
 for i in recordList:
     # this particular item's data; will be pushed into items
@@ -1005,6 +1008,16 @@ for i in recordList:
             itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
             itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions' target='_blank'>these terms and conditions.</a>"
             itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
+           
+            if 'ayer' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list'].append('Edward E. Ayer Collection')
+            if 'gr' in itemDict['FILENAME'].lower() or 'graff' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list'].append('Everett D. Graff Collection')
+            if 'mms' in itemDict['FILENAME'].lower() or 'midwest' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list'].append('Midwest Manuscript Collection')
+            if 'modms' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list'].append('Modern Manuscript Collection')
+
             # DCMI type
             # hard coding video and audio; everything else is text
             # if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
