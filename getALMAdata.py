@@ -1010,13 +1010,13 @@ for i in recordList:
             itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
            
             if 'ayer' in itemDict['FILENAME'].lower():
-                itemDict['ARCHIVAL_COLLECTION_list'].append('Edward E. Ayer Collection')
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Edward E. Ayer Collection'
             if 'gr' in itemDict['FILENAME'].lower() or 'graff' in itemDict['FILENAME'].lower():
-                itemDict['ARCHIVAL_COLLECTION_list'].append('Everett D. Graff Collection')
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Everett D. Graff Collection'
             if 'mms' in itemDict['FILENAME'].lower() or 'midwest' in itemDict['FILENAME'].lower():
-                itemDict['ARCHIVAL_COLLECTION_list'].append('Midwest Manuscript Collection')
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Midwest Manuscript Collection'
             if 'modms' in itemDict['FILENAME'].lower():
-                itemDict['ARCHIVAL_COLLECTION_list'].append('Modern Manuscript Collection')
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Modern Manuscript Collection'
 
             # DCMI type
             # hard coding video and audio; everything else is text
@@ -1044,7 +1044,7 @@ for i in recordList:
                         if type_code in 'at':
                             itemDict['DCMIType'] = 'Text'
                         if type_code == 'p':
-                            itemDict['DCMIType'] = 'Collection'
+                            itemDict['DCMIType'] = 'Text'
                         if type_code == 'e':
                             itemDict['FORMAT_list'].append('Cartographic materials')
                     # language and date (#2)
@@ -1261,8 +1261,8 @@ for i in recordList:
                     elif code == '710': # archival collection
                         if root[0].find("record/leader").text[7] == 'c':
                             for value in record.findall('subfield'): 
-                                if value.get('code') == 'a' and 'Newberry Library' not in value.text:
-                                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text
+                                if value.get('code') == 'a' and '(Newberry Library)' in value.text: # took out not in
+                                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newbery Library)', '')
 
                 # link to crosswalk:
                 # https://docs.google.com/spreadsheets/d/1etIvF5Vjn1kty51qevsZ9mlWTOl_U9p_iCzWk_WOP9M/edit#gid=1296018796
@@ -1326,6 +1326,7 @@ if len(items) > 0:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(items)
+        pp(f'Wrote spreadsheet: {output_file}')
 else: 
     print("Big error.  Items array was length = 0")
 
