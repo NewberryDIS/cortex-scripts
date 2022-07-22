@@ -1261,7 +1261,7 @@ for i in recordList:
                     elif code == '710': # archival collection
                         if root[0].find("record/leader").text[7] == 'c':
                             for value in record.findall('subfield'): 
-                                if value.get('code') == 'a' and '(Newberry Library)' in value.text: # took out not in
+                                if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
                                     itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newbery Library)', '')
 
                 # link to crosswalk:
