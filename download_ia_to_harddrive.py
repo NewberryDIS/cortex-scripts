@@ -147,7 +147,7 @@ if __name__ == '__main__':
 				start = time.time()
 				with zipfile.ZipFile(f'{folder_name_1}', 'r') as zip_ref:
 					zip_ref.extractall(f'.')
-
+				os.remove(folder_name_1)
 				for file in os.listdir(folder_name_2):
 					new_file_name = bibid + '_' + file
 					os.rename(os.path.join(folder_name_2, file), os.path.join(folder_name_2, new_file_name))
