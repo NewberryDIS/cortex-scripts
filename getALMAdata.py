@@ -18,7 +18,6 @@ apikey = config.apiKey
 
 reviewSet = []
 
-
 def set_dict():
     itemDict = {}
     itemDict['FILENAME'] = ''
@@ -1127,7 +1126,19 @@ def valueAssignmentFromCode(record,code):
         if root[0].find("record/leader").text[7] == 'c':
             for value in record.findall('subfield'): 
                 if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
-                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newberry Library)', '')
+                    if value.text.replace('(Newberry Library)', '') != itemDict['ARCHIVAL_COLLECTION_list']['1']:
+                        itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newberry Library)', '')
+                    else:
+                        itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1']
+
+
+
+def check_dict(item_dict):
+    if item_dict['BIBID'] == '':
+        return False
+
+
+    # return itemDict
 
 
 
@@ -1216,7 +1227,7 @@ for i in recordList:
             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=' + str(i['BIBID']) + '&view=full&expand=None&apikey=' + apikey 
         else: 
             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
-        print(itemUrl)
+        # print(itemUrl)
         try: 
             itemData = urllib.request.urlopen(itemUrl)
             parsedXml = ET.parse(itemData)
@@ -1269,7 +1280,7 @@ for i in recordList:
                                         
                 marcCode = record.get('tag')
                 # pp(marcCode)
-                valueAssignmentFromCode(record, marcCode)
+                valueAssignmentFromCode(itemDict, record, marcCode)
                 
                 # resolving lists created by multiple marc codes
                 if ('PLACE' not in itemDict or len(itemDict['PLACE']) == 0) and len(itemDict['PLACE_list']) > 0: 
