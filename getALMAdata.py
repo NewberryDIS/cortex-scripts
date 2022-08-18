@@ -1227,7 +1227,7 @@ for i in recordList:
             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=' + str(i['BIBID']) + '&view=full&expand=None&apikey=' + apikey 
         else: 
             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
-        # print(itemUrl)
+        print(itemUrl)
         try: 
             itemData = urllib.request.urlopen(itemUrl)
             parsedXml = ET.parse(itemData)
@@ -1280,7 +1280,7 @@ for i in recordList:
                                         
                 marcCode = record.get('tag')
                 # pp(marcCode)
-                valueAssignmentFromCode(itemDict, record, marcCode)
+                valueAssignmentFromCode(record, marcCode)
                 
                 # resolving lists created by multiple marc codes
                 if ('PLACE' not in itemDict or len(itemDict['PLACE']) == 0) and len(itemDict['PLACE_list']) > 0: 
@@ -1348,3 +1348,6 @@ end = time.time()
 totalIterationTime = end - start
 totalIterationTime = totalIterationTime / 60
 pp(f'Time to download metadata (mins): {totalIterationTime}')
+
+
+
