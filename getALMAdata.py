@@ -895,6 +895,7 @@ def add_box_no_to_title(filename, title):
 
 def valueAssignmentFromCode(record,code):
     # DCMIType
+    pp(code)
     if code == None:
         type_code = record.text[6]
         if type_code == 'g':
@@ -975,23 +976,38 @@ def valueAssignmentFromCode(record,code):
             if value.get('code').isalpha():
                 if value.get('code') not in 'kbt':
                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
-                    pp(itemDict['CALL_NUMBER'])
+                    # pp(itemDict['CALL_NUMBER'])
     elif code == '099' and len(itemDict['CALL_NUMBER']) == 0: # call number
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
                 if value.get('code') != '9' or value.get('code') != '9LOCAL':
                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
                     # pp(itemDict['CALL_NUMBER'])
-    elif code == '710' and len(itemDict['CALL_NUMBER']) == 0: # call number
-        for value in record.findall('subfield'):
-            if value.get('code') != None:
-                if value.get('code') == 'n':
-                    if value.text[-1] == '.':
-                        value = value.text.strip('.')
-                    else:
-                        value = value.text
-                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value)
-                    # pp(itemDict['CALL_NUMBER'])
+    elif code == '710':
+
+        if len(itemDict['CALL_NUMBER']) == 0: # call number
+        # pp('First 710')
+            for value in record.findall('subfield'):
+                if value.get('code') != None:
+                    if value.get('code') == 'n':
+                        if value.text[-1] == '.':
+                            value = value.text.strip('.')
+                        else:
+                            value = value.text
+                        itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value)
+                        # pp(itemDict['CALL_NUMBER'])
+
+        # if root[0].find("record/leader").text[7] == 'c': # archival collection title
+        #     pp('Archival collection title')
+        #     pp(root[0].find('record/leader').text[7])
+        for value in record.findall('subfield'): 
+            pp(value.text)
+            if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
+                if value.text.replace('(Newberry Library)', '') != itemDict['ARCHIVAL_COLLECTION_list']['1']:
+                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newberry Library)', '')
+                else:
+                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1']
+
     elif code == '100' or code == '110': # creator
         for value in record.findall('subfield'): 
             code = value.get('code')
@@ -1122,14 +1138,17 @@ def valueAssignmentFromCode(record,code):
                     pass
                 formatString = pipeDelimeter(formatString, val)
             itemDict['FORMAT'] = formatString
-    elif code == '710': # archival collection
-        if root[0].find("record/leader").text[7] == 'c':
-            for value in record.findall('subfield'): 
-                if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
-                    if value.text.replace('(Newberry Library)', '') != itemDict['ARCHIVAL_COLLECTION_list']['1']:
-                        itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newberry Library)', '')
-                    else:
-                        itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1']
+    # elif code == '710': # archival collection
+    #     pp('You are here')
+    #     # pp(root[0].find('record/leader').text[7])
+        # if root[0].find("record/leader").text[7] == 'c':
+        # for value in record.findall('subfield'): 
+            # pp(value.text)
+            # if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
+            #     if value.text.replace('(Newberry Library)', '') != itemDict['ARCHIVAL_COLLECTION_list']['1']:
+            #         itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newberry Library)', '')
+            #     else:
+            #         itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1']
 
 
 
@@ -1193,12 +1212,12 @@ for folder in folders:
         folder_response = get_folder.json()
         for item in folder_response['APIResponse']['Items']:
             if item['Purpose'] != 'Public':
-                if item['OriginalFilename'][:4].isdigit() == True:
+                if item['OriginalFilename'][:4].isdigit() != True:
                     bibid_dict = get_bibid_dict(item['OriginalFilename'])
                     recordList.append(bibid_dict)
         nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
 
-# pp(recordList)
+pp(recordList)
 
 
 # Everett D. Graff Collection
@@ -1236,7 +1255,7 @@ for i in recordList:
         except: 
             root = ''
 
-        # if the data returned has a root value, we continue; if it doesn't, it's dumped into the reject pile
+#         # if the data returned has a root value, we continue; if it doesn't, it's dumped into the reject pile
         if len(root) > 0:
 
             itemDict['BIBID'] = strip_bibid(i['BIBID'])
@@ -1265,7 +1284,7 @@ for i in recordList:
             if 'modms' in itemDict['FILENAME'].lower():
                 itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Modern Manuscript Collection'
 
-            # DCMI type
+#             # DCMI type
             # hard coding video and audio; everything else is text
             # if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
             #     itemDict['DCMIType'] = "Moving Image"
@@ -1313,11 +1332,9 @@ for i in recordList:
     if itemDict['TITLE'] == '':
         itemDict['PURPOSE'] = 'Pending process'
     items.append(itemDict)
-    pp(itemDict['FILENAME'])
-    pp(itemDict['TITLE'])
     # pp(itemDict['DCMIType'])
 
-    # outputdirectory = './20211111-ingest/op/'
+#     # outputdirectory = './20211111-ingest/op/'
 
 dataFilename = f'Central_{today}_data_recent_uploads.csv'
 
@@ -1333,21 +1350,21 @@ if len(items) > 0:
 else: 
     print("Big error.  Items array was length = 0")
 
-if len(reviewSet) > 0:
-    dataFile = open('json_reviewSet_' + dataFilename + '.json', 'w')
-    dataFile.write(json.dumps(reviewSet, indent=4))
-    keys = reviewSet[0].keys()
-    reviewFilename = 'review_' + dataFilename
-    with open(reviewFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
-        dict_writer = csv.DictWriter(output_file, keys)
-        dict_writer.writeheader()
-        dict_writer.writerows(reviewSet)
+# if len(reviewSet) > 0:
+#     dataFile = open('json_reviewSet_' + dataFilename + '.json', 'w')
+#     dataFile.write(json.dumps(reviewSet, indent=4))
+#     keys = reviewSet[0].keys()
+#     reviewFilename = 'review_' + dataFilename
+#     with open(reviewFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
+#         dict_writer = csv.DictWriter(output_file, keys)
+#         dict_writer.writeheader()
+#         dict_writer.writerows(reviewSet)
 
 
-end = time.time()
-totalIterationTime = end - start
-totalIterationTime = totalIterationTime / 60
-pp(f'Time to download metadata (mins): {totalIterationTime}')
+# end = time.time()
+# totalIterationTime = end - start
+# totalIterationTime = totalIterationTime / 60
+# pp(f'Time to download metadata (mins): {totalIterationTime}')
 
 
 
