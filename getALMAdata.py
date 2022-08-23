@@ -879,6 +879,7 @@ def placeFormatter(valueText):
 
 
 def add_box_no_to_title(filename, title):
+    filename = filename.lower()
     box_search = re.findall("box_([0-9]*)",filename)
     if len(box_search) > 0:
         box_str = f' [box {box_search[0]}]'
