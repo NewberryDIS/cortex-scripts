@@ -1227,148 +1227,148 @@ for folder in folders:
 # # Everett D. Graff Collection
 # # 
 
-# items = []
-# for i in recordList:
-#     # this particular item's data; will be pushed into items
-#     itemDict = set_dict()
-#     # pp(itemDict)
+items = []
+for i in recordList:
+    # this particular item's data; will be pushed into items
+    itemDict = set_dict()
+    # pp(itemDict)
             
-#     # if items already has an item with this bibid in it, then we copy all data from that one, changing only the filename; 
-#     # this approach becomes problematic in cases like the Akwesasne notes where the bibid may have other changing values, like dates
-#     alreadyDoneIndex = next((index for (index, d) in enumerate(items) if len(items) > 0 and 'BIBID' in d and d['BIBID'] == i['BIBID']), None)
-#     if alreadyDoneIndex != None:
-#         # copy entire item
-#         itemDict = dict(items[alreadyDoneIndex])
-#         # change filename in new one 
-#         # itemDict['FILENAME'] = i['FILENAME']
-#         itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
-#     # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
-#     else: 
-#         # using length to if bibid already has the 99/8805867 pre- and suffix 
-#         # sample url: https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=998600358805867&view=full&expand=None&apikey=xxxd
-#         if len(i['BIBID']) > 8: 
-#             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=' + str(i['BIBID']) + '&view=full&expand=None&apikey=' + apikey 
-#         else: 
-#             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
-#         print(itemUrl)
-#         try: 
-#             itemData = urllib.request.urlopen(itemUrl)
-#             parsedXml = ET.parse(itemData)
-#             root = parsedXml.getroot()
-#             # pp(root)
-#         except: 
-#             root = ''
+    # if items already has an item with this bibid in it, then we copy all data from that one, changing only the filename; 
+    # this approach becomes problematic in cases like the Akwesasne notes where the bibid may have other changing values, like dates
+    alreadyDoneIndex = next((index for (index, d) in enumerate(items) if len(items) > 0 and 'BIBID' in d and d['BIBID'] == i['BIBID']), None)
+    if alreadyDoneIndex != None:
+        # copy entire item
+        itemDict = dict(items[alreadyDoneIndex])
+        # change filename in new one 
+        # itemDict['FILENAME'] = i['FILENAME']
+        itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
+    # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
+    else: 
+        # using length to if bibid already has the 99/8805867 pre- and suffix 
+        # sample url: https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=998600358805867&view=full&expand=None&apikey=xxxd
+        if len(i['BIBID']) > 8: 
+            itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=' + str(i['BIBID']) + '&view=full&expand=None&apikey=' + apikey 
+        else: 
+            itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
+        print(itemUrl)
+        try: 
+            itemData = urllib.request.urlopen(itemUrl)
+            parsedXml = ET.parse(itemData)
+            root = parsedXml.getroot()
+            # pp(root)
+        except: 
+            root = ''
 
-# #         # if the data returned has a root value, we continue; if it doesn't, it's dumped into the reject pile
-#         if len(root) > 0:
+#         # if the data returned has a root value, we continue; if it doesn't, it's dumped into the reject pile
+        if len(root) > 0:
 
-#             itemDict['BIBID'] = strip_bibid(i['BIBID'])
-#             # itemDict['FILENAME'] = i['FILENAME']
-#             itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
-#             itemDict['TITLE'] = '' if root[0].find('title') is None else titleFormatter(root[0].find('title').text)
-#             # same length test as above
-#             # if len(i['BIBID']) > 8: 
-#             #     itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma' + str(i['BIBID']) + '">View record</a>'
-#             # else: 
-#             #     itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99' + str(i['BIBID']) + '8805867">View record</a>'
-#             if len(i['BIBID']) > 8: 
-#                 itemDict['CATALOG_LINK'] = f"<a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma{str(i['BIBID'])}'' target='_blank'>View record</a>"
-#             else: 
-#                 itemDict['CATALOG_LINK'] = f"<a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99{str(i['BIBID'])}8805867' target='_blank'>View record</a>"           
-#             itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
-#             itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions' target='_blank'>these terms and conditions.</a>"
-#             itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
+            itemDict['BIBID'] = strip_bibid(i['BIBID'])
+            # itemDict['FILENAME'] = i['FILENAME']
+            itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
+            itemDict['TITLE'] = '' if root[0].find('title') is None else titleFormatter(root[0].find('title').text)
+            # same length test as above
+            # if len(i['BIBID']) > 8: 
+            #     itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma' + str(i['BIBID']) + '">View record</a>'
+            # else: 
+            #     itemDict['CATALOG_LINK'] = '<a href="https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99' + str(i['BIBID']) + '8805867">View record</a>'
+            if len(i['BIBID']) > 8: 
+                itemDict['CATALOG_LINK'] = f"<a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma{str(i['BIBID'])}'' target='_blank'>View record</a>"
+            else: 
+                itemDict['CATALOG_LINK'] = f"<a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma99{str(i['BIBID'])}8805867' target='_blank'>View record</a>"           
+            itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
+            itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions' target='_blank'>these terms and conditions.</a>"
+            itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
            
-#             if 'ayer' in itemDict['FILENAME'].lower():
-#                 itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Edward E. Ayer Collection'
-#             if 'gr' in itemDict['FILENAME'].lower() or 'graff' in itemDict['FILENAME'].lower():
-#                 itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Everett D. Graff Collection'
-#             if 'mms' in itemDict['FILENAME'].lower() or 'midwest' in itemDict['FILENAME'].lower():
-#                 itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Midwest Manuscript Collection'
-#             if 'modms' in itemDict['FILENAME'].lower():
-#                 itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Modern Manuscript Collection'
+            if 'ayer' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Edward E. Ayer Collection'
+            if 'gr' in itemDict['FILENAME'].lower() or 'graff' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Everett D. Graff Collection'
+            if 'mms' in itemDict['FILENAME'].lower() or 'midwest' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Midwest Manuscript Collection'
+            if 'modms' in itemDict['FILENAME'].lower():
+                itemDict['ARCHIVAL_COLLECTION_list']['1'] = 'Modern Manuscript Collection'
 
-# #             # DCMI type
-#             # hard coding video and audio; everything else is text
-#             # if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
-#             #     itemDict['DCMIType'] = "Moving Image"
-#             # elif itemDict['FILENAME'].endswith(".wav") or  itemDict['FILENAME'].endswith(".mp3"):
-#             #     itemDict['DCMIType'] = "Sound"
-#             # else: 
-#             #     itemDict['DCMIType'] = 'Text'
+#             # DCMI type
+            # hard coding video and audio; everything else is text
+            # if itemDict['FILENAME'].endswith(".mov") or itemDict['FILENAME'].endswith(".avi") or itemDict['FILENAME'].endswith(".mp4") or itemDict['FILENAME'].endswith(".m2t") or itemDict['FILENAME'].endswith(".m4v"):
+            #     itemDict['DCMIType'] = "Moving Image"
+            # elif itemDict['FILENAME'].endswith(".wav") or  itemDict['FILENAME'].endswith(".mp3"):
+            #     itemDict['DCMIType'] = "Sound"
+            # else: 
+            #     itemDict['DCMIType'] = 'Text'
 
-#             for record in root[0].find('record'):
-#                 # link to crosswalk:
-#                 # https://docs.google.com/spreadsheets/d/1etIvF5Vjn1kty51qevsZ9mlWTOl_U9p_iCzWk_WOP9M/edit#gid=1296018796
+            for record in root[0].find('record'):
+                # link to crosswalk:
+                # https://docs.google.com/spreadsheets/d/1etIvF5Vjn1kty51qevsZ9mlWTOl_U9p_iCzWk_WOP9M/edit#gid=1296018796
                                         
-#                 marcCode = record.get('tag')
-#                 # pp(marcCode)
-#                 valueAssignmentFromCode(record, marcCode)
+                marcCode = record.get('tag')
+                # pp(marcCode)
+                valueAssignmentFromCode(record, marcCode)
                 
-#                 # resolving lists created by multiple marc codes
-#                 if ('PLACE' not in itemDict or len(itemDict['PLACE']) == 0) and len(itemDict['PLACE_list']) > 0: 
-#                     itemDict['PLACE'] = resolveList(itemDict['PLACE_list'])
-#                 if ('SUBJECTS' not in itemDict or len(itemDict['SUBJECTS']) == 0) and len(itemDict['SUBJECTS_list']) > 0: 
-#                     itemDict['SUBJECTS']  = resolveList(itemDict['SUBJECTS_list'])
-#                 if ('FORMAT' not in itemDict or len(itemDict['FORMAT']) == 0) and len(itemDict['FORMAT_list']) > 0: 
-#                     itemDict['FORMAT']  = resolveList(itemDict['FORMAT_list'])
-#                 if itemDict['STANDARDIZED_RIGHTS'] == 'Not In Copyright - United States':
-#                     itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
-#                 if itemDict['STANDARDIZED_RIGHTS'] == 'No copyright - United States':
-#                     itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
+                # resolving lists created by multiple marc codes
+                if ('PLACE' not in itemDict or len(itemDict['PLACE']) == 0) and len(itemDict['PLACE_list']) > 0: 
+                    itemDict['PLACE'] = resolveList(itemDict['PLACE_list'])
+                if ('SUBJECTS' not in itemDict or len(itemDict['SUBJECTS']) == 0) and len(itemDict['SUBJECTS_list']) > 0: 
+                    itemDict['SUBJECTS']  = resolveList(itemDict['SUBJECTS_list'])
+                if ('FORMAT' not in itemDict or len(itemDict['FORMAT']) == 0) and len(itemDict['FORMAT_list']) > 0: 
+                    itemDict['FORMAT']  = resolveList(itemDict['FORMAT_list'])
+                if itemDict['STANDARDIZED_RIGHTS'] == 'Not In Copyright - United States':
+                    itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
+                if itemDict['STANDARDIZED_RIGHTS'] == 'No copyright - United States':
+                    itemDict['STANDARDIZED_RIGHTS'] = 'No Copyright - United States'
 
-#             # remove format-helping values
-#             del itemDict['SUBJECTS_list']
-#             del itemDict['PLACE_list']
-#             del itemDict['FORMAT_list']
-#             del itemDict['ARCHIVAL_COLLECTION_list']
-#             reviewSet.append(itemDict)
+            # remove format-helping values
+            del itemDict['SUBJECTS_list']
+            del itemDict['PLACE_list']
+            del itemDict['FORMAT_list']
+            del itemDict['ARCHIVAL_COLLECTION_list']
+            reviewSet.append(itemDict)
             
-#     if 'SUBJECTS_list' in itemDict.keys():
-#         del itemDict['SUBJECTS_list']
-#     if 'ARCHIVAL_COLLECTION_list' in itemDict.keys():
-#         del itemDict['ARCHIVAL_COLLECTION_list']
-#     if 'PLACE_list' in itemDict.keys():
-#         del itemDict['PLACE_list']
-#     if 'FORMAT_list' in itemDict.keys():
-#         del itemDict['FORMAT_list']
-#     # pp(itemDict['DATE_SORT'])
-#     if itemDict['TITLE'] == '':
-#         itemDict['PURPOSE'] = 'Pending process'
-#     items.append(itemDict)
-#     # pp(itemDict['DCMIType'])
+    if 'SUBJECTS_list' in itemDict.keys():
+        del itemDict['SUBJECTS_list']
+    if 'ARCHIVAL_COLLECTION_list' in itemDict.keys():
+        del itemDict['ARCHIVAL_COLLECTION_list']
+    if 'PLACE_list' in itemDict.keys():
+        del itemDict['PLACE_list']
+    if 'FORMAT_list' in itemDict.keys():
+        del itemDict['FORMAT_list']
+    # pp(itemDict['DATE_SORT'])
+    if itemDict['TITLE'] == '':
+        itemDict['PURPOSE'] = 'Pending process'
+    items.append(itemDict)
+    # pp(itemDict['DCMIType'])
 
-# #     # outputdirectory = './20211111-ingest/op/'
+#     # outputdirectory = './20211111-ingest/op/'
 
-# dataFilename = f'Central_{today}_data_recent_uploads.csv'
+dataFilename = f'Central_{today}_data_recent_uploads.csv'
 
 
-# print("length of item array: " + str(len(items)))
-# if len(items) > 0:
-#     keys = items[0].keys()
-#     with open(dataFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
+print("length of item array: " + str(len(items)))
+if len(items) > 0:
+    keys = items[0].keys()
+    with open(dataFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(items)
+        pp(f'Wrote spreadsheet: {output_file}')
+else: 
+    print("Big error.  Items array was length = 0")
+
+# if len(reviewSet) > 0:
+#     dataFile = open('json_reviewSet_' + dataFilename + '.json', 'w')
+#     dataFile.write(json.dumps(reviewSet, indent=4))
+#     keys = reviewSet[0].keys()
+#     reviewFilename = 'review_' + dataFilename
+#     with open(reviewFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
 #         dict_writer = csv.DictWriter(output_file, keys)
 #         dict_writer.writeheader()
-#         dict_writer.writerows(items)
-#         pp(f'Wrote spreadsheet: {output_file}')
-# else: 
-#     print("Big error.  Items array was length = 0")
-
-# # if len(reviewSet) > 0:
-# #     dataFile = open('json_reviewSet_' + dataFilename + '.json', 'w')
-# #     dataFile.write(json.dumps(reviewSet, indent=4))
-# #     keys = reviewSet[0].keys()
-# #     reviewFilename = 'review_' + dataFilename
-# #     with open(reviewFilename, 'w', newline='', errors='ignore', encoding='utf-8')  as output_file:
-# #         dict_writer = csv.DictWriter(output_file, keys)
-# #         dict_writer.writeheader()
-# #         dict_writer.writerows(reviewSet)
+#         dict_writer.writerows(reviewSet)
 
 
-# # end = time.time()
-# # totalIterationTime = end - start
-# # totalIterationTime = totalIterationTime / 60
-# # pp(f'Time to download metadata (mins): {totalIterationTime}')
+# end = time.time()
+# totalIterationTime = end - start
+# totalIterationTime = totalIterationTime / 60
+# pp(f'Time to download metadata (mins): {totalIterationTime}')
 
 
 
