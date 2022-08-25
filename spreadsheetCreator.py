@@ -1,81 +1,34 @@
 import csv
 
 # input file should be a list of paths
-file1 = open('monroeSports.txt', 'r')
-monroeSports = file1.readlines()
+filePathsTextFile = open('monroeSports.txt', 'r')
+filePathsFullList = filePathsTextFile.readlines()
 
 prevPath = [ 1,2,3,4 ]
-headerList = [
-    "BIBID",
-    "FILENAME",
-    "TITLE",
-    "CATALOG_LINK",
-    "CONTRIBUTING_INSTITUTION",
-    "OA_POLICY",
-    "DISCLAIMER_STMT",
-    "DCMIType",
-    "CREATOR",
-    "PUBLISHER_ORIGINAL",
-    "CALL_NUMBER",
-    "FORMAT_EXTENT",
-    "DESCRIPTION",
-    "LANGUAGE",
-    "SUBJECTS",
-    "PLACE",
-    "FORMAT",
-    "BIOGRAPHICAL/HISTORICAL NOTE",
-    "SUMMARY",
-    "DATE_DISPLAY",
-    "DATE_SORT",
-    "STANDARDIZED_RIGHTS",
-    "ARCHIVAL_COLLECTION",
-    "DATE_DIGITAL",
-    "ACCESS_STMT",
-    "TITLE_ALTERNATIVE",
-    "CONTRIBUTOR",
-    "TRANSCRIPTION",
-    "CITATION",
-    "IN_COPYRIGHT"
-]
-dataList = [
-    "",
-    "",
-    "John I. Monroe collection of sports postcards, 1902-1931",
-    "",
-    "Newberry Library",
-    "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions' target='_blank'>these terms and conditions</a>",
-    "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They contain language and imagery that are offensive because of content relating to ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>",
-    "Still image",
-    "Monroe, John I.",
-    "",
-    "Modern MS Monroe Sports",
-    "",
-    "Note: This collection-level data is temporary until postcard-level cataloging can be completed.",
-    "English",
-    "Sports",
-    "",
-    "Postcards",
-    "",
-    "",
-    "1902-1931",
-    "1902/1931",
-    "Copyright Not Evaluated",
-    "John I. Monroe collection of sports postcards",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-] 
 
-# create enpty spreadsheets with correct header
-for line in monroeSports:
+headerList = []
+dataList = []
+
+# input csv should be a sample data file with header and one row of sample data; any other rows will be ignored
+with open ('Central_MonroeJ_Sports.csv', 'r') as csvfile: 
+    sampleData = csv.reader(csvfile)
+    headerList = next(sampleData)
+    for idx, row in enumerate(sampleData):
+        if idx == 0:
+            dataList = row
+        else: 
+            break
+
+# create new spreadsheets with header
+
+for line in filePathsFullList:
     fullPath = line.split("/")
 
     # popping off the filename from the array so we can concatenate it to generate the file in the correct place
     filename = fullPath.pop(-1)
     ssFileName = "/".join(fullPath) + '/Central_' + fullPath[-1] + ".csv"
+
+    # if the file exists the script will fail so we use a try/except block
     try: 
         # create new file
         ssFile = open(ssFileName, "x")
@@ -86,12 +39,11 @@ for line in monroeSports:
         writer.writerow(headerList)
         # gotta close file both times or weird things happen, also best practices etc
         ssFile.close()
-    # if the file exists the script will fail so we use a try/except block
     except: 
         print(ssFileName + ": file already exists, skipping...")
 
 # fill spreadsheets with data + filename
-for line in monroeSports:
+for line in filePathsFullList:
     fullPath = line.split("/")
     filename = fullPath.pop(-1).strip()
     # insert filename at position 2 in the data list; note we're modifying the original list, not creating a new one
@@ -104,4 +56,4 @@ for line in monroeSports:
     writer.writerow(dataList)
     appendFile.close()
 
-file1.close()
+filePathsTextFile.close()
