@@ -42,36 +42,41 @@ pp('Authenticated!')
     
 
 for folder in folders:
-    url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,Purpose{token}{json_suffix}'
+    url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,CoreField.Purpose{token}{json_suffix}'
     get_folder = requests.get(url)
     folder_response = get_folder.json()
     total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
     items = folder_response['APIResponse']['Items']
     # pp(items)
     for item in items:
-        # if item['Purpose'] == 'Public':
-        if item['OriginalFilename'][:4].isdigit() == True:
-            bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
-            recordList.append(bibid_dict)
+        if item['CoreField.Purpose'] != 'Public':
+            if item['OriginalFilename'][:4].isdigit() == True:
+                pp(f'Getting data for: {item["OriginalFilename"]}')
+                bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
+                recordList.append(bibid_dict)
     nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
     while nextPage != None:
         get_folder = requests.get(f'{nextPage["href"]}{json_suffix}')
         folder_response = get_folder.json()
         for item in folder_response['APIResponse']['Items']:
-            # if item['Purpose'] == 'Public':
-            if item['OriginalFilename'][:4].isdigit() == True:
-                bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
-                recordList.append(bibid_dict)
+            if item['CoreField.Purpose'] != 'Public':
+                if item['OriginalFilename'][:4].isdigit() == True:
+                    pp(f'Getting data for: {item["OriginalFilename"]}')
+                    bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
+                    recordList.append(bibid_dict)
         nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
 
 
 records_count = len(recordList)
 pp(f'Getting data for {records_count} records')
-
+pp(recordList)
 
 
 items = []
+count = 0
 for i in recordList:
+    count += 1
+    pp(count)
     # this particular item's data; will be pushed into items
     itemDict = af.set_dict()
             
@@ -81,9 +86,13 @@ for i in recordList:
     if alreadyDoneIndex != None:
         # copy entire item
         itemDict = dict(items[alreadyDoneIndex])
+        # pp('Already done')
+        # pp(itemDict)
         # change filename in new one 
         # itemDict['FILENAME'] = i['FILENAME']
         itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
+        pp(itemDict['TITLE'])
+        items.append(itemDict)
     # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
     else: 
         # using length to if bibid already has the 99/8805867 pre- and suffix 
@@ -140,10 +149,8 @@ for i in recordList:
         itemDict = af.processStandardizedRights(itemDict)
         itemDict = af.processTitle(itemDict)
         itemDict = af.processArchivalCollection(itemDict)
+        pp(itemDict['TITLE'])
         items.append(itemDict)
-        pp(itemDict['DCMITYPE'])
-            # pp(itemDict['ARCHIVAL_COLLECTION'])
-            # pp(items)
 
 
 dataFilename = f'Central_{today}_data_recent_uploads.csv'
