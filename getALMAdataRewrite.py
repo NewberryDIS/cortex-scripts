@@ -49,7 +49,7 @@ for folder in folders:
     items = folder_response['APIResponse']['Items']
     # pp(items)
     for item in items:
-        if item['CoreField.Purpose'] != 'Public':
+        if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
             if item['OriginalFilename'][:4].isdigit() == True:
                 pp(f'Getting data for: {item["OriginalFilename"]}')
                 bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
@@ -59,8 +59,8 @@ for folder in folders:
         get_folder = requests.get(f'{nextPage["href"]}{json_suffix}')
         folder_response = get_folder.json()
         for item in folder_response['APIResponse']['Items']:
-            if item['CoreField.Purpose'] != 'Public':
-                if item['OriginalFilename'][:4].isdigit() == True:
+            if item['CoreField.Purpose'] != 'Public' or item['CoreField.Purpose'] == 'Pending process':
+                if item['OriginalFilename'][:4].isdigit() == True: 
                     pp(f'Getting data for: {item["OriginalFilename"]}')
                     bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
                     recordList.append(bibid_dict)
