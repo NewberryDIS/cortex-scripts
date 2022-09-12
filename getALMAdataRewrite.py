@@ -40,18 +40,26 @@ token = f'&token={token}'
 json_suffix = '&format=json'
 pp('Authenticated!')
     
+# for c in folders:
+#     with open(c, encoding='utf-8', errors='ignore') as csv_:
+#         reader = csv.DictReader(csv_)
+#         for row in reader:
+#             bibid_dict = af.get_bibid_dict(row['Original file name'])
+#             recordList.append(bibid_dict)
 
+# pp(recordList)
 for folder in folders:
     url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,CoreField.Purpose{token}{json_suffix}'
     get_folder = requests.get(url)
     folder_response = get_folder.json()
     total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
+    pp(total)
     items = folder_response['APIResponse']['Items']
     # pp(items)
     for item in items:
         if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
             if item['OriginalFilename'][:4].isdigit() == True:
-                pp(f'Getting data for: {item["OriginalFilename"]}')
+                # pp(f'Getting data for: {item["OriginalFilename"]}')
                 bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
                 recordList.append(bibid_dict)
     nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
@@ -59,9 +67,9 @@ for folder in folders:
         get_folder = requests.get(f'{nextPage["href"]}{json_suffix}')
         folder_response = get_folder.json()
         for item in folder_response['APIResponse']['Items']:
-            if item['CoreField.Purpose'] != 'Public' or item['CoreField.Purpose'] == 'Pending process':
+            if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
                 if item['OriginalFilename'][:4].isdigit() == True: 
-                    pp(f'Getting data for: {item["OriginalFilename"]}')
+                    # pp(f'Getting data for: {item["OriginalFilename"]}')
                     bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
                     recordList.append(bibid_dict)
         nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
@@ -69,7 +77,8 @@ for folder in folders:
 
 records_count = len(recordList)
 pp(f'Getting data for {records_count} records')
-pp(recordList)
+# pp(recordList)
+
 
 
 items = []
