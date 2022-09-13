@@ -596,7 +596,7 @@ def rearrange_sortDate(date):
             # pp(dates[0])
             # pp(dates[1])
             date = f'{dates[1]}-{dates[0]}'
-    pp(date)
+    # pp(date)
     return date
 
 
@@ -1011,8 +1011,6 @@ def valueAssignmentFromCode(itemDict, record,code):
         for value in record.findall('subfield'): 
             code = value.get('code')
             if code not in 'cgh':
-                if code == 'a' and 'Newberry Library' not in value.text:
-                    itemDict['ARCHIVAL_COLLECTION_list'].append(value.text.strip('.,').replace('. /',''))
                 returnValue = concatenator(returnValue, value.text)
         itemDict['TITLE'] = add_box_no_to_title(itemDict['FILENAME'], titleFormatter(returnValue))
     elif code == '260': # PUBLISHER_ORIGINAL, date
