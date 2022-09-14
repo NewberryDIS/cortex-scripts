@@ -969,7 +969,7 @@ def valueAssignmentFromCode(itemDict, record,code):
     elif code == '852' and len(itemDict['CALL_NUMBER']) == 0: # call number
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
-                if value.get('code') not in 'kbt':
+                if value.get('code') not in 'hkbt':
                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
                     # pp(itemDict['CALL_NUMBER'])
     elif code == '099' and len(itemDict['CALL_NUMBER']) == 0: # call number
