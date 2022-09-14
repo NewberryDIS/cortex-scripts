@@ -977,16 +977,16 @@ def valueAssignmentFromCode(itemDict, record,code):
             if value.get('code').isalpha():
                 if value.get('code') != '9' or value.get('code') != '9LOCAL':
                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
-    elif code == '710':
-        if len(itemDict['CALL_NUMBER']) == 0: # call number
-            for value in record.findall('subfield'):
-                if value.get('code') != None:
-                    if value.get('code') == 'n':
-                        if value.text[-1] == '.':
-                            value = value.text.strip('.')
-                        else:
-                            value = value.text
-                        itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value)
+    # elif code == '710':
+    #     if len(itemDict['CALL_NUMBER']) == 0: # call number
+    #         for value in record.findall('subfield'):
+    #             if value.get('code') != None:
+    #                 if value.get('code') == 'n':
+    #                     if value.text[-1] == '.':
+    #                         value = value.text.strip('.')
+    #                     else:
+    #                         value = value.text
+    #                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value)
 
         # if root[0].find("record/leader").text[7] == 'c': # archival collection title
         #     pp('Archival collection title')
