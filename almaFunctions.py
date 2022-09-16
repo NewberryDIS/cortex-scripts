@@ -1158,6 +1158,12 @@ def processArchivalCollection(itemDict):
     return itemDict
 
 
+def remove_article_from_title(itemDict):
+    if itemDict['TITLE'][0].lower() == 'a':
+        itemDict['TITLE'] = itemDict['TITLE'][1:].lstrip().capitalize()
+        return itemDict
+
+
 def processTitle(itemDict):
     if itemDict['TITLE'] == '':
         itemDict['PURPOSE'] = 'Pending process'
