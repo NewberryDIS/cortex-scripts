@@ -52,6 +52,7 @@ def set_dict():
     itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
     itemDict['DCMITYPE'] = ''
     itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
+    itemDict['KEYWORDS'] = ''
 
     return itemDict
 
@@ -1161,6 +1162,7 @@ def processArchivalCollection(itemDict):
 def remove_article_from_title(itemDict):
     if itemDict['TITLE'][0].lower() == 'a':
         itemDict['TITLE'] = itemDict['TITLE'][1:].lstrip().capitalize()
+        itemdict['KEYWORDS'] = 'initial-a'
         return itemDict
 
 
