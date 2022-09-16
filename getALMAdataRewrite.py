@@ -76,6 +76,7 @@ for folder in folders:
 
 
 records_count = len(recordList)
+pp(recordList)
 pp(f'Getting data for {records_count} records')
 # pp(recordList)
 
@@ -157,6 +158,7 @@ for i in recordList:
 
         itemDict = af.processStandardizedRights(itemDict)
         itemDict = af.processTitle(itemDict)
+        itemDict = af.remove_article_from_title(itemDict)
         itemDict = af.processArchivalCollection(itemDict)
         pp(itemDict['TITLE'])
         items.append(itemDict)
