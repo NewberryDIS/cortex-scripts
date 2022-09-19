@@ -49,7 +49,7 @@ def set_dict():
     itemDict['PURPOSE'] = 'Public'
     itemDict['CATALOG_LINK'] = ''
     itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions' target='_blank'>these terms and conditions.</a>"
-    itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
+    # itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
     itemDict['DCMITYPE'] = ''
     itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
     itemDict['KEYWORDS'] = ''
@@ -1135,35 +1135,45 @@ def check_dict(item_dict):
 
 
 def processArchivalCollection(itemDict):
-    if 'ayer' in itemDict['FILENAME'].lower() and 'Edward E. Ayer Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
-        itemDict['ARCHIVAL_COLLECTION_list'].append('Edward E. Ayer Collection')
-    if 'gr' in itemDict['FILENAME'].lower() or 'graff' in itemDict['FILENAME'].lower() and 'Everett D. Graff Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
-        itemDict['ARCHIVAL_COLLECTION_list'].append('Everett D. Graff Collection')
-    if 'mms' in itemDict['FILENAME'].lower() or 'midwest' in itemDict['FILENAME'].lower() and 'Midwest Manuscript Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
-        itemDict['ARCHIVAL_COLLECTION_list'].append('Midwest Manuscript Collection')
-    if 'modms' in itemDict['FILENAME'].lower() and 'Modern Manuscript Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
-        itemDict['ARCHIVAL_COLLECTION_list'].append('Modern Manuscript Collection')
+    try:
+        if 'ayer' in itemDict['FILENAME'].lower() and 'Edward E. Ayer Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
+            itemDict['ARCHIVAL_COLLECTION_list'].append('Edward E. Ayer Collection')
+        if 'gr' in itemDict['FILENAME'].lower() or 'graff' in itemDict['FILENAME'].lower() and 'Everett D. Graff Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
+            itemDict['ARCHIVAL_COLLECTION_list'].append('Everett D. Graff Collection')
+        if 'mms' in itemDict['FILENAME'].lower() or 'midwest' in itemDict['FILENAME'].lower() and 'Midwest Manuscript Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
+            itemDict['ARCHIVAL_COLLECTION_list'].append('Midwest Manuscript Collection')
+        if 'modms' in itemDict['FILENAME'].lower() and 'Modern Manuscript Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
+            itemDict['ARCHIVAL_COLLECTION_list'].append('Modern Manuscript Collection')
 
     # if 'Ayer Manuscript Collection' in itemDict['ARCHIVAL_COLLECTION_list']:
     #     itemDict['ARCHIVAL_COLLECTION_list'] = itemDict['ARCHIVAL_COLLECTION_list'].remove('Edward E. Ayer Manuscript Collection')
-    itemDict['ARCHIVAL_COLLECTION_list'] = [i for i in itemDict['ARCHIVAL_COLLECTION_list'] if i != 'Edward E. Ayer  Manuscript Collection']
+        itemDict['ARCHIVAL_COLLECTION_list'] = [i for i in itemDict['ARCHIVAL_COLLECTION_list'] if i != 'Edward E. Ayer  Manuscript Collection']
 
-    if len(itemDict['ARCHIVAL_COLLECTION_list']) > 1:
-        itemDict['ARCHIVAL_COLLECTION_list'] = [i.strip().replace('(Newberry Library)', '') for i in itemDict['ARCHIVAL_COLLECTION_list']]
-        itemDict['ARCHIVAL_COLLECTION'] = '|'.join(itemDict['ARCHIVAL_COLLECTION_list'])
-    elif len(itemDict['ARCHIVAL_COLLECTION_list']) == 1:
-        itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list'][0]
-    else:
-        itemDict['ARCHIVAL_COLLECTION'] = ''
+        if len(itemDict['ARCHIVAL_COLLECTION_list']) > 1:
+            itemDict['ARCHIVAL_COLLECTION_list'] = [i.strip().replace('(Newberry Library)', '') for i in itemDict['ARCHIVAL_COLLECTION_list']]
+            itemDict['ARCHIVAL_COLLECTION'] = '|'.join(itemDict['ARCHIVAL_COLLECTION_list'])
+        elif len(itemDict['ARCHIVAL_COLLECTION_list']) == 1:
+            itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list'][0]
+        else:
+            itemDict['ARCHIVAL_COLLECTION'] = ''
 
-    return itemDict
+        return itemDict
+
+    except TypeError:
+        return itemDict
 
 
 def remove_article_from_title(itemDict):
-    if itemDict['TITLE'][0].lower() == 'a':
-        itemDict['TITLE'] = itemDict['TITLE'][1:].lstrip().capitalize()
-        itemdict['KEYWORDS'] = 'initial-a'
+    if len(itemDict['TITLE']) > 0:
+        if itemDict['TITLE'][0].lower() == 'a':
+            itemDict['TITLE'] = itemDict['TITLE'][1:].lstrip().capitalize()
+            itemDict['KEYWORDS'] = 'initial-a'
+            return itemDict
+        else:
+            return itemDict
+    else:
         return itemDict
+    
 
 
 def processTitle(itemDict):
