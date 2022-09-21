@@ -1135,6 +1135,7 @@ def check_dict(item_dict):
 
 
 def processArchivalCollection(itemDict):
+    # pp(itemDict)
     if 'ayer' in itemDict['FILENAME'].lower() and 'Edward E. Ayer Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
         itemDict['ARCHIVAL_COLLECTION_list'].append('Edward E. Ayer Collection')
     if 'gr' in itemDict['FILENAME'].lower() or 'graff' in itemDict['FILENAME'].lower() and 'Everett D. Graff Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:

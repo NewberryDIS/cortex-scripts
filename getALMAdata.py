@@ -38,10 +38,11 @@ def set_dict():
     itemDict['DATE_SORT'] = ''
     itemDict['STANDARDIZED_RIGHTS'] = ''
     itemDict['ARCHIVAL_COLLECTION'] = ''
-    itemDict['ARCHIVAL_COLLECTION_list'] = {
-                '1': '',
-                '2': ''
-            }
+    itemDict['ARCHIVAL_COLLECTION_list'] = []
+    # itemDict['ARCHIVAL_COLLECTION_list'] = {
+    #             '1': '',
+    #             '2': ''
+    #         }
     itemDict['SUBJECTS_list'] = []
     itemDict['PLACE_list'] = []
     itemDict['FORMAT_list'] = []
@@ -1004,15 +1005,20 @@ def valueAssignmentFromCode(record,code):
         for value in record.findall('subfield'): 
             # pp(value.text)
             if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
-                if value.text.replace('(Newberry Library)', '') != itemDict['ARCHIVAL_COLLECTION_list']['1']:
-                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newberry Library)', '')
+                # if value.text.replace('(Newberry Library)', '') != itemDict['ARCHIVAL_COLLECTION_list']['1']:
+                if value.text.replace('(Newberry Library)', '') not in itemDict['ARCHIVAL_COLLECTION_list'] and len(itemDict['ARCHIVAL_COLLECTION_list']) > 1:
+                    # itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1'] + '|' + value.text.replace('(Newberry Library)', '')
+                    itemDict['ARCHIVAL_COLLECTION_list'].append(value.text.replace('(Newberry Library)', ''))
+                    itemDict['ARCHIVAL_COLLECTION'] = '|'.join(itemDict['ARCHIVAL_COLLECTION_list'])
                 else:
-                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list']['1']
+                    itemDict['ARCHIVAL_COLLECTION'] = itemDict['ARCHIVAL_COLLECTION_list'][0].replace('(Newberry Library)', '') ### Process ARCHIVAL_COLLECTION_list at the end
 
     elif code == '100' or code == '110': # creator
         for value in record.findall('subfield'): 
             code = value.get('code')
             if code == 'a' and code.isalpha():
+                if value.text == 'Edward E. Ayer Collection (Newberry Library)':
+                    itemDict['ARCHIVAL_COLLECTION']
                 itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], value.text)
             elif code != 'e' and code.isalpha():
                 itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], value.text)
