@@ -45,12 +45,11 @@ for c in folders:
         reader = csv.DictReader(csv_)
         for row in reader:
             bibid_dict = {}
+            bibid_dict['FILENAME'] = row['FILENAME']
             bibid_dict['BIBID'] = row['BIBID']
-            bibid_dict ['FILENAME'] = row['FILENAME']
-            # bibid_dict = af.get_bibid_dict(row['Original file name'])
             recordList.append(bibid_dict)
 
-pp(recordList)
+# pp(recordList)
 # for folder in folders:
 #     url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,CoreField.Purpose{token}{json_suffix}'
 #     get_folder = requests.get(url)
@@ -92,6 +91,7 @@ for i in recordList:
     pp(count)
     # this particular item's data; will be pushed into items
     itemDict = af.set_dict()
+    # pp(items)
             
     # if items already has an item with this bibid in it, then we copy all data from that one, changing only the filename; 
     # this approach becomes problematic in cases like the Akwesasne notes where the bibid may have other changing values, like dates
@@ -114,11 +114,13 @@ for i in recordList:
             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=' + str(i['BIBID']) + '&view=full&expand=None&apikey=' + apikey 
         else: 
             itemUrl = 'https://api-na.hosted.exlibrisgroup.com/almaws/v1/bibs?mms_id=99' + str(i['BIBID']) + '8805867&view=full&expand=None&apikey=' + apikey 
-        print(itemUrl)
+        # print(itemUrl)
         try: 
             itemData = urllib.request.urlopen(itemUrl)
             parsedXml = ET.parse(itemData)
             root = parsedXml.getroot()
+            # pp('Root')
+            # pp(root)
         except: 
             root = ''
 
