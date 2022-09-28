@@ -39,48 +39,53 @@ token = token['APIResponse']['Token']
 token = f'&token={token}'
 json_suffix = '&format=json'
 pp('Authenticated!')
-    
-for c in folders:
-    with open(c, encoding='utf-8', errors='ignore') as csv_:
-        reader = csv.DictReader(csv_)
-        for row in reader:
-            bibid_dict = {}
-            bibid_dict['FILENAME'] = row['FILENAME']
-            bibid_dict['BIBID'] = row['BIBID']
-            recordList.append(bibid_dict)
-
-# pp(recordList)
-# for folder in folders:
-#     url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,CoreField.Purpose{token}{json_suffix}'
-#     get_folder = requests.get(url)
-#     folder_response = get_folder.json()
-#     total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
-#     pp(total)
-#     items = folder_response['APIResponse']['Items']
-#     # pp(items)
-#     for item in items:
-#         if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
-#             if item['OriginalFilename'][:4].isdigit() == True:
-#                 # pp(f'Getting data for: {item["OriginalFilename"]}')
-#                 bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
-#                 recordList.append(bibid_dict)
-#     nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
-#     while nextPage != None:
-#         get_folder = requests.get(f'{nextPage["href"]}{json_suffix}')
-#         folder_response = get_folder.json()
-#         for item in folder_response['APIResponse']['Items']:
-#             if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
-#                 if item['OriginalFilename'][:4].isdigit() == True: 
-#                     # pp(f'Getting data for: {item["OriginalFilename"]}')
-#                     bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
-#                     recordList.append(bibid_dict)
-#         nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
 
 
-# records_count = len(recordList)
-# pp(recordList)
-# pp(f'Getting data for {records_count} records')
-# pp(recordList)
+### If passing a spreadsheet as an argument, the spreadsheet needs two columns titled this: BIBID and FILENAME
+
+if '.csv' in folders[0]:    
+    for c in folders:
+        with open(c, encoding='utf-8', errors='ignore') as csv_:
+            reader = csv.DictReader(csv_)
+            for row in reader:
+                # pp(row.keys()) ## If getting 'KeyError', uncomment this line and run script to see if encoding issues have warped the first column heading into something like: '\ufeffBIBID'. 
+                ## If so, you will need to paste that column heading into the matching one below
+                bibid_dict = {}
+                bibid_dict['FILENAME'] = row['FILENAME']
+                bibid_dict['BIBID'] = row['BIBID']
+                recordList.append(bibid_dict)
+                # pp(recordList)
+
+else:
+    for folder in folders:
+        url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,CoreField.Purpose{token}{json_suffix}'
+        get_folder = requests.get(url)
+        folder_response = get_folder.json()
+        total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
+        pp(total)
+        items = folder_response['APIResponse']['Items']
+        # pp(items)
+        for item in items:
+            if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
+                if item['OriginalFilename'][:4].isdigit() == True:
+                    # pp(f'Getting data for: {item["OriginalFilename"]}')
+                    bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
+                    recordList.append(bibid_dict)
+        nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
+        while nextPage != None:
+            get_folder = requests.get(f'{nextPage["href"]}{json_suffix}')
+            folder_response = get_folder.json()
+            for item in folder_response['APIResponse']['Items']:
+                if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
+                    if item['OriginalFilename'][:4].isdigit() == True: 
+                        # pp(f'Getting data for: {item["OriginalFilename"]}')
+                        bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
+                        recordList.append(bibid_dict)
+            nextPage = folder_response['APIResponse']['GlobalInfo'].get('NextPage')
+
+
+records_count = len(recordList)
+pp(f'Getting data for {records_count} records')
 
 
 
@@ -102,8 +107,8 @@ for i in recordList:
         # pp('Already done')
         # pp(itemDict)
         # change filename in new one 
-        itemDict['FILENAME'] = i['FILENAME']
-        # itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
+        # itemDict['FILENAME'] = i['FILENAME']
+        itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
         # pp(itemDict['TITLE'])
         items.append(itemDict)
     # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
@@ -128,8 +133,8 @@ for i in recordList:
         if len(root) > 0:
 
             itemDict['BIBID'] = af.strip_bibid(i['BIBID'])
-            itemDict['FILENAME'] = i['FILENAME']
-            # itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
+            # itemDict['FILENAME'] = i['FILENAME']
+            itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
             itemDict['TITLE'] = '' if root[0].find('title') is None else af.titleFormatter(root[0].find('title').text)
             # same length test as above
             if len(i['BIBID']) > 8: 
@@ -164,7 +169,7 @@ for i in recordList:
 
         itemDict = af.processStandardizedRights(itemDict)
         itemDict = af.processTitle(itemDict)
-        # itemDict = af.remove_article_from_title(itemDict)
+        itemDict = af.remove_article_from_title(itemDict)
         itemDict = af.processArchivalCollection(itemDict)
         pp(itemDict['TITLE'])
         pp(itemDict['CALL_NUMBER'])

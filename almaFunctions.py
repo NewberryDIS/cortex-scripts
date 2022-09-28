@@ -961,6 +961,11 @@ def valueAssignmentFromCode(itemDict, record,code):
             itemDict['DATE_SORT'] = dateList[1] 
             if 'STANDARDIZED_RIGHTS' not in itemDict or itemDict['STANDARDIZED_RIGHTS'] == '':
                 itemDict['STANDARDIZED_RIGHTS'] = dateList[3]
+    elif code == '050' and len(itemDict['CALL_NUMBER']) == 0: # call number
+        for value in record.findall('subfield'):
+            if value.get('code').isalpha():
+                if value.get('code') in 'ab':
+                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
     elif code == '090' and len(itemDict['CALL_NUMBER']) == 0: # call number
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
@@ -970,7 +975,7 @@ def valueAssignmentFromCode(itemDict, record,code):
     elif code == '852' and len(itemDict['CALL_NUMBER']) == 0: # call number
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
-                if value.get('code') not in 'bt':
+                if value.get('code') not in 'zbt':
                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
                     # pp(itemDict['CALL_NUMBER'])
     elif code == '099' and len(itemDict['CALL_NUMBER']) == 0: # call number
