@@ -106,9 +106,11 @@ for i in recordList:
         itemDict = dict(items[alreadyDoneIndex])
         # pp('Already done')
         # pp(itemDict)
-        # change filename in new one 
-        # itemDict['FILENAME'] = i['FILENAME']
-        itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
+        # change filename in new one
+        # if i['BIBID'] not in i['FILENAME']: 
+        itemDict['FILENAME'] = i['FILENAME']
+        # else:
+        #     itemDict['FILENAME'] = i['BIBID'] + '_' + i['FILENAME']
         # pp(itemDict['TITLE'])
         items.append(itemDict)
     # if this bibid isn't already in items, it goes through the full process; ie, this is the bulk of the script
@@ -133,8 +135,8 @@ for i in recordList:
         if len(root) > 0:
 
             itemDict['BIBID'] = af.strip_bibid(i['BIBID'])
-            # itemDict['FILENAME'] = i['FILENAME']
-            itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
+            itemDict['FILENAME'] = i['FILENAME']
+            # itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
             itemDict['TITLE'] = '' if root[0].find('title') is None else af.titleFormatter(root[0].find('title').text)
             # same length test as above
             if len(i['BIBID']) > 8: 
