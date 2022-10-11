@@ -62,7 +62,7 @@ else:
         get_folder = requests.get(url)
         folder_response = get_folder.json()
         total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
-        pp(total)
+        # pp(total)
         items = folder_response['APIResponse']['Items']
         # pp(items)
         for item in items:
@@ -86,14 +86,14 @@ else:
 
 records_count = len(recordList)
 pp(f'Getting data for {records_count} records')
-
+pp(recordList)
 
 
 items = []
 count = 0
 for i in recordList:
     count += 1
-    pp(count)
+    # pp(count)
     # this particular item's data; will be pushed into items
     itemDict = af.set_dict()
     # pp(items)
@@ -135,7 +135,7 @@ for i in recordList:
         if len(root) > 0:
 
             itemDict['BIBID'] = af.strip_bibid(i['BIBID'])
-            itemDict['FILENAME'] = i['FILENAME']
+            # itemDict['FILENAME'] = i['FILENAME']
             # itemDict['FILENAME'] =  i['BIBID'] + '_' + i['FILENAME']
             itemDict['TITLE'] = '' if root[0].find('title') is None else af.titleFormatter(root[0].find('title').text)
             # same length test as above
@@ -174,7 +174,10 @@ for i in recordList:
         itemDict = af.remove_article_from_title(itemDict)
         itemDict = af.processArchivalCollection(itemDict)
         pp(itemDict['TITLE'])
-        pp(itemDict['CALL_NUMBER'])
+        # pp(itemDict['SUBJECTS'])
+        # pp(itemDict['FORMAT'])
+        # pp(itemDict['TITLE'])
+        # pp(itemDict['CALL_NUMBER'])
         items.append(itemDict)
 
 

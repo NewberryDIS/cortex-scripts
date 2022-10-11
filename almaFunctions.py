@@ -752,8 +752,9 @@ def get_bibid_dict(filename):
     try:
         bibid = filename.split('_')[0]
         d['BIBID'] = bibid
-        original_filename = filename.replace(bibid + '_', '')
-        d['FILENAME'] = original_filename
+        # # original_filename = filename.replace(bibid + '_', '')
+        # d['FILENAME'] = original_filename
+        d['FILENAME'] = filename
     except Exception as e:
         pp(d)
         return d
@@ -1061,6 +1062,7 @@ def valueAssignmentFromCode(itemDict, record,code):
                 biohistnote = biohistnote + value.text
         itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = biohistnote 
     elif code == '610' or code == '650' or code == '611': # subject, place, format
+        # pp(value.text)
         # using a, x, y subfields for subject and then using/supplimenting place with z
         subjectDict = {
             'a': '',
@@ -1072,25 +1074,38 @@ def valueAssignmentFromCode(itemDict, record,code):
         # pushing values into a list 
         for value in record.findall('subfield'): 
             try: 
-                valueText = value.text.strip(',.')
+                valueText = value.text.strip(',.') #### 
             except: 
                 pass
                 # print(value.text)
             code = value.get('code')
-            if code == 'a': subjectDict['a'] = valueText
-            elif code == 'v': subjectDict['v'] = dashDelimeter(subjectDict['v'], valueText)
-            elif code == 'z': subjectDict['z'] = dashDelimeter(subjectDict['z'], valueText)
+            if code == 'a': 
+                subjectDict['a'] = valueText
+            elif code == 'v': 
+                # pp(subjectDict['v'])
+                subjectDict['v'] = dashDelimeter(subjectDict['v'], valueText)
+                # pp(subjectDict)
+                # pp(valueText)
+            elif code == 'z': 
+                subjectDict['z'] = dashDelimeter(subjectDict['z'], valueText)
+                # pp(subjectDict)
+                # pp(valueText)
         # fullValue = dashDelimeter(subjectDict['a'], dashDelimeter(subjectDict['x'], subjectDict['y']))
         if len(subjectDict['a']) > 0 and subjectDict['a'] not in itemDict['SUBJECTS_list'] and len(itemDict['SUBJECTS_list']) < 5:
             itemDict['SUBJECTS_list'].append(subjectDict['a'])
         stringVersion = ''
         for val in itemDict['SUBJECTS_list']:
-            stringVersion = pipeDelimeter(stringVersion, val)
+            if val.lower() == 'manuscripts':
+                if val not in itemDict['FORMAT_list']:
+                    itemDict['FORMAT_list'].append(val)
+            else:
+                stringVersion = pipeDelimeter(stringVersion, val)
+        # itemDict['SUBJECTS'] = '|'.join(itemDict['SUBJECTS_list'])
         itemDict['SUBJECTS'] = stringVersion
         if subjectDict['z'] not in itemDict['PLACE_list'] and len(subjectDict['z']) > 0:
             itemDict['PLACE_list'].append(subjectDict['z'])
             itemDict['PLACE_list'] = sorted(itemDict['PLACE_list'])
-        if subjectDict['v'] not in itemDict['FORMAT_list'] and len(subjectDict['v']) > 0:
+        if subjectDict['v'] not in itemDict['FORMAT_list'] and len(subjectDict['v']) > 0: 
             itemDict['FORMAT_list'].append(subjectDict['v'])
             itemDict['FORMAT_list'] = sorted(itemDict['FORMAT_list'])
     elif code == '651': # place
@@ -1123,15 +1138,18 @@ def valueAssignmentFromCode(itemDict, record,code):
                         itemDict['FORMAT_list'].append(valueText)
             formatString = ''
             for val in itemDict['FORMAT_list']:
-                try:
-                    parenDex = val.index('(')
-                    firstCharAfter = val[parenDex + 1]
-                    if firstCharAfter.islower():
-                        val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
-                except:
-                    pass
-                formatString = pipeDelimeter(formatString, val)
-            itemDict['FORMAT'] = formatString
+                if val != 'Sources': 
+                    try:
+                        parenDex = val.index('(')
+                        firstCharAfter = val[parenDex + 1]
+                        if firstCharAfter.islower():
+                            val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
+                    except:
+                        pass
+                    formatString = pipeDelimeter(formatString, val)
+                    # pp(formatString)
+        itemDict['FORMAT'] = formatString
+
 
 
 def check_dict(item_dict):
