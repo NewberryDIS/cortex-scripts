@@ -758,7 +758,7 @@ def get_bibid_dict(filename):
     d['BIBID'] = ''
     d['FILENAME'] = ''    
     try:
-        bibid = filename.split('_')[0]
+        bibid = filename.strip().split('_')[0]
         d['BIBID'] = bibid
         # # original_filename = filename.replace(bibid + '_', '')
         # d['FILENAME'] = original_filename

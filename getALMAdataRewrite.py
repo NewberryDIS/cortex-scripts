@@ -62,12 +62,12 @@ else:
         get_folder = requests.get(url)
         folder_response = get_folder.json()
         total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
-        # pp(total)
+        pp(total)
         items = folder_response['APIResponse']['Items']
         # pp(items)
         for item in items:
             if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
-                if item['OriginalFilename'][:4].isdigit() == True:
+                if item['OriginalFilename'].strip()[:4].isdigit() == True:
                     # pp(f'Getting data for: {item["OriginalFilename"]}')
                     bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
                     recordList.append(bibid_dict)
@@ -77,7 +77,7 @@ else:
             folder_response = get_folder.json()
             for item in folder_response['APIResponse']['Items']:
                 if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
-                    if item['OriginalFilename'][:4].isdigit() == True: 
+                    if item['OriginalFilename'].strip()[:4].isdigit() == True: 
                         # pp(f'Getting data for: {item["OriginalFilename"]}')
                         bibid_dict = af.get_bibid_dict(item['OriginalFilename'])
                         recordList.append(bibid_dict)
