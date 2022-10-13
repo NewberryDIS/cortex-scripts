@@ -734,6 +734,14 @@ def concatenator(a,b):
     else: 
         return b
 
+
+def excluded_formats(format_value):
+    excluded_formats = ['sources', 'postcard albums']
+    if format_value.lower() not in excluded_formats:
+        return format_value
+    else:
+        return None
+
 # because a lot of values can come from multiple marc codes, we dump them all into a list and then resolve the list after we've been through all the fields
 # initially created for place and subjects
 def resolveList(value):
@@ -1138,7 +1146,8 @@ def valueAssignmentFromCode(itemDict, record,code):
                         itemDict['FORMAT_list'].append(valueText)
             formatString = ''
             for val in itemDict['FORMAT_list']:
-                if val != 'Sources': 
+                formatAccepted = excluded_formats(val)
+                if val != None: 
                     try:
                         parenDex = val.index('(')
                         firstCharAfter = val[parenDex + 1]
