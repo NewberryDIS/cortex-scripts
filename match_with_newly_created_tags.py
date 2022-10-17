@@ -57,7 +57,7 @@ count = 0
 with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 	reader = csv.DictReader(csv1_)
 	for row in reader:
-		if row['Correct_Tag'] != '':
+		if row['Correct_Tag'] != '' and 'ignore' not in row['Correct_Tag']:
 			# Check first if original tag exists at all, considering how many we've deleted since I created these lists for Jessica
 			tag_check = check_for_id(allIds, row['Level0_Label'])
 			# pp(tag_check)

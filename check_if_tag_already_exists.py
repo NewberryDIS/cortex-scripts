@@ -24,11 +24,15 @@ def check_for_tag(allTagsDict, tag):
 
 
 def check_for_id(allIdsList, orig_tag):
-	tag_id = orig_tag.split('_')[1].strip()
-	if tag_id in allIdsList:
-		return True
-	else:
-		pp(f'Tag already deleted: {orig_tag}')
+	try:
+		tag_id = orig_tag.split('_')[1].strip()
+		if tag_id in allIdsList:
+			return True
+		else:
+			pp(f'Tag already deleted: {orig_tag}')
+			return False
+	except IndexError:
+		pp(orig_tag)
 		return False
 
 
@@ -62,7 +66,7 @@ count = 0
 with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 	reader = csv.DictReader(csv1_)
 	for row in reader:
-		if row['Correct_Tag'] != '':
+		if row['Correct_Tag'] != '' and 'ignore' not in row['Correct_Tag']:
 			# Check first if original tag exists at all, considering how many we've deleted since I created these lists for Jessica
 			tag_check = check_for_id(allIds, row['Level0_Label'])
 			# pp(tag_check)
@@ -86,6 +90,7 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 						d['KeyType'] = args.tagType
 						d['ReplaceBy'] = get_tag
 						d['Level0_Label'] = row['Level0_Label']
+						pp(f'{d["Level0_Label"]} replaced by {d["ReplaceBy"]}')
 						# pp(d)
 						rows.append(d)
 					else: # If tag doesn't already exist, creates template row for its creation
@@ -95,6 +100,7 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 						d['MultipleAssignment'] = 'FALSE'
 						d['NotSearchable'] = 'FALSE'
 						d['ToBeVetted'] = 'FALSE'
+						pp(f'Creating {d["Level0_Label"]}')
 						# pp(d)
 						rows.append(d)
 			else:
@@ -103,7 +109,7 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 				# pp(count)
 				# pp(row)
 
-# pp(len(rows))
+pp(len(rows))
 
 keys = rows[0].keys()
 with open('tag_to_delete_or_replace_or_create.csv', 'w', encoding='utf-8', errors='ignore', newline='') as outfile:
