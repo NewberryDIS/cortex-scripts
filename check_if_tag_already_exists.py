@@ -89,7 +89,7 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 						# pp(k)
 						d['KeyType'] = args.tagType
 						d['ReplaceBy'] = get_tag
-						d['Facet_Category'] = f'{args.TagType}_Filter'
+						d['Facet_Category_Code'] = f'{args.TagType}_Filter'
 						d['Level0_Label'] = row['Level0_Label']
 						pp(f'{d["Level0_Label"]} replaced by {d["ReplaceBy"]}')
 						# pp(d)
@@ -97,7 +97,7 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 					else: # If tag doesn't already exist, creates template row for its creation
 						d['KeyType'] = args.tagType
 						d['Level0_Label'] = row['Correct_Tag']
-						d['Facet_Category'] = f'{args.TagType}_Filter'
+						d['Facet_Category_Code'] = f'{args.TagType}_Filter'
 						d['TreeLevel'] = '0'
 						d['MultipleAssignment'] = 'FALSE'
 						d['NotSearchable'] = 'FALSE'
