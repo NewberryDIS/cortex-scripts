@@ -23,14 +23,13 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv_:
 	reader = csv.DictReader(csv_)
 	for row in reader:
 		# pp(row.keys())
-		if 'box' not in row['\ufeff"Title"']:
-			if '[' in row['\ufeff"Title"']:
-				r = re.search(r'(\[[\w]*\]$)', row['\ufeff"Title"'])
-				if r != None:
+		if '[' in row['\ufeff"Title"']:
+			r = re.search(r'(\[[\w]*\]$)', row['\ufeff"Title"'])
+			if r != None:
+				if 'box' in r.group() and 'vol' in r.group():
 					row['Title'] = row['\ufeff"Title"'].replace(r.group(), '').strip()
 					pp(row['Title'])
 					rows.append(row)
-
 
 
 pd.DataFrame(rows).to_csv('out.csv', index=False, header=True)
