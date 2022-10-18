@@ -71,6 +71,7 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv1_:
 					d['KeyType'] = args.tagType
 					d['ReplaceBy'] = get_tag
 					d['Level0_Label'] = row['Level0_Label']
+					d['Facet_Category'] = f'{args.TagType}_Filter'
 					pp(f'{d["Level0_Label"]} to be replaced by {d["ReplaceBy"]}')
 					rows.append(d)
 		else:
