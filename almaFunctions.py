@@ -48,7 +48,7 @@ def set_dict():
     itemDict['IN_COPYRIGHT'] = ''
     itemDict['PURPOSE'] = 'Public'
     itemDict['CATALOG_LINK'] = ''
-    itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/rights-and-reproductions' target='_blank'>these terms and conditions.</a>"
+    itemDict['OA_POLICY'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/policies' target='_blank'>these terms and conditions.</a>"
     # itemDict['DISCLAIMER_STMT'] = "All materials in the Newberry Library’s collections have research value and reflect the society in which they were produced. They may contain language and imagery that are offensive because of content relating to: ability, gender, race, religion, sexuality/sexual orientation, and other categories. <a href='https://www.newberry.org/sites/default/files/textpage-attachments/Statement_on_Potentially_Offensive_Materials.pdf' target='_blank'>More information</a>"
     itemDict['DCMITYPE'] = ''
     itemDict['CONTRIBUTING_INSTITUTION'] = "Newberry Library"
