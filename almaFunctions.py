@@ -1197,8 +1197,9 @@ def processArchivalCollection(itemDict):
 
 def remove_article_from_title(itemDict):
     if len(itemDict['TITLE']) > 0:
-        if itemDict['TITLE'][0].lower() == 'a':
-            itemDict['TITLE'] = itemDict['TITLE'][1:].lstrip().capitalize()
+        title = itemDict['TITLE'].split(' ')
+        if title[0].lower() == 'a' or title[0].lower() == 'an':
+            itemDict['TITLE'] = ' '.join(title[1:]).capitalize()
             itemDict['KEYWORDS'] = 'initial-a'
             return itemDict
         else:
