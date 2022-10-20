@@ -992,25 +992,11 @@ def valueAssignmentFromCode(itemDict, record,code):
             if value.get('code').isalpha():
                 if value.get('code') != '9' or value.get('code') != '9LOCAL':
                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
-    # elif code == '710':
-    #     if len(itemDict['CALL_NUMBER']) == 0: # call number
-    #         for value in record.findall('subfield'):
-    #             if value.get('code') != None:
-    #                 if value.get('code') == 'n':
-    #                     if value.text[-1] == '.':
-    #                         value = value.text.strip('.')
-    #                     else:
-    #                         value = value.text
-    #                     itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value)
-
-        # if root[0].find("record/leader").text[7] == 'c': # archival collection title
-        #     pp('Archival collection title')
-        #     pp(root[0].find('record/leader').text[7])
+    elif code == '710': # Archival Collection Title
         for value in record.findall('subfield'): 
             if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
                 if value.text.replace('(Newberry Library)', '') not in itemDict['ARCHIVAL_COLLECTION_list']:
                     itemDict['ARCHIVAL_COLLECTION_list'].append(value.text.replace('(Newberry Library)', ''))
-
     elif code == '100' or code == '110': # creator
         for value in record.findall('subfield'): 
             code = value.get('code')
@@ -1103,7 +1089,7 @@ def valueAssignmentFromCode(itemDict, record,code):
             itemDict['SUBJECTS_list'].append(subjectDict['a'])
         stringVersion = ''
         for val in itemDict['SUBJECTS_list']:
-            if val.lower() == 'manuscripts':
+            if 'manuscripts' in val.lower():
                 if val not in itemDict['FORMAT_list']:
                     itemDict['FORMAT_list'].append(val)
             else:
@@ -1138,25 +1124,25 @@ def valueAssignmentFromCode(itemDict, record,code):
         itemDict['PLACE'] = placeString
     elif code == '655': # format
             # try: 
-        if itemDict['FORMAT'].count('|') <= 4:
-            for value in record.findall('subfield'): 
-                if value.get('code') == 'a':
-                    valueText = value.text.strip(',') if value.text.endswith('etc.') else value.text.strip('.,')
-                    if valueText not in itemDict['FORMAT_list']: 
-                        itemDict['FORMAT_list'].append(valueText)
-            formatString = ''
-            for val in itemDict['FORMAT_list']:
-                formatAccepted = excluded_formats(val)
-                if val != None: 
-                    try:
-                        parenDex = val.index('(')
-                        firstCharAfter = val[parenDex + 1]
-                        if firstCharAfter.islower():
-                            val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
-                    except:
-                        pass
-                    formatString = pipeDelimeter(formatString, val)
-                    # pp(formatString)
+        # if itemDict['FORMAT'].count('|') <= 4: # This line makes no sense? itemDict['FORMAT'] will always be empty string at this point
+        for value in record.findall('subfield'): 
+            if value.get('code') == 'a':
+                valueText = value.text.strip(',') if value.text.endswith('etc.') else value.text.strip('.,')
+                if valueText not in itemDict['FORMAT_list']: 
+                    itemDict['FORMAT_list'].append(valueText)
+        formatString = ''
+        for val in itemDict['FORMAT_list']:
+            formatAccepted = excluded_formats(val)
+            if val != None: 
+                try:
+                    parenDex = val.index('(')
+                    firstCharAfter = val[parenDex + 1]
+                    if firstCharAfter.islower():
+                        val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
+                except:
+                    pass
+                formatString = pipeDelimeter(formatString, val)
+                # pp(formatString)
         itemDict['FORMAT'] = formatString
 
 
@@ -1167,6 +1153,7 @@ def check_dict(item_dict):
 
 
 def processArchivalCollection(itemDict):
+    exclude = ['Edward E. Ayer  Manuscript Collection', 'Society of Collectors'] # Add more values to exclude in this list
     try:
         if 'ayer' in itemDict['FILENAME'].lower() and 'Edward E. Ayer Collection' not in itemDict['ARCHIVAL_COLLECTION_list']:
             itemDict['ARCHIVAL_COLLECTION_list'].append('Edward E. Ayer Collection')
@@ -1179,7 +1166,7 @@ def processArchivalCollection(itemDict):
 
     # if 'Ayer Manuscript Collection' in itemDict['ARCHIVAL_COLLECTION_list']:
     #     itemDict['ARCHIVAL_COLLECTION_list'] = itemDict['ARCHIVAL_COLLECTION_list'].remove('Edward E. Ayer Manuscript Collection')
-        itemDict['ARCHIVAL_COLLECTION_list'] = [i for i in itemDict['ARCHIVAL_COLLECTION_list'] if i != 'Edward E. Ayer  Manuscript Collection']
+        itemDict['ARCHIVAL_COLLECTION_list'] = [i for i in itemDict['ARCHIVAL_COLLECTION_list'] if i not in exclude]
 
         if len(itemDict['ARCHIVAL_COLLECTION_list']) > 1:
             itemDict['ARCHIVAL_COLLECTION_list'] = [i.strip().replace('(Newberry Library)', '') for i in itemDict['ARCHIVAL_COLLECTION_list']]
@@ -1207,7 +1194,6 @@ def remove_article_from_title(itemDict):
     else:
         return itemDict
     
-
 
 def processTitle(itemDict):
     if itemDict['TITLE'] == '':
