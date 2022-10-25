@@ -31,12 +31,14 @@ with open(args.csv1, encoding='utf-8', newline='', errors='ignore') as csv1_:
 with open(args.csv2, encoding='utf-8', newline='', errors='ignore') as csv2_:
 	reader = csv.DictReader(csv2_)
 	for data in reader:
-		if d.get(data['Original file name']) != None:
-			child = d.get(data['Original file name'])
+		# compound_object['Visibility'] = ''
+		child = d.get(data['Original file name'])
+		if child != None:
 			child['Visibility'] = data['Visibility class']
 		if unique_virtual_folders.get(data['Title']) != None:
+			compound_object = unique_virtual_folders.get(data['Title'])
+			compound_object['Visibility'] = ''
 			if 'compound object' in data['Sub type'].lower():
-				compound_object = unique_virtual_folders.get(data['Title'])
 				compound_object['Visibility'] = data['Visibility class']
 				compound_object['Compound object type'] = data['Sub type']
 
@@ -63,6 +65,28 @@ for k, v in d.items():
 
 pp(len(rows))
 
+
+## Uncomment out if you want to create spreadsheet of child assets and compound objects with different visibility statuses
+mismatch = []
+for r in rows:
+	# pp(r.keys())
+	try:
+		if r['Compound object visibility'] != r['Visibility']:
+			if r['Compound object title'] not in mismatch:
+				mismatch.append(r['Compound object title'])
+	except KeyError:
+		continue
+		# pp(r)
+
+# pp(mismatch)
+pp(f'How many compound objects have a visibility mismatch: {len(mismatch)}')
+dictionary = {'Compound object title': mismatch}  
+dataframe = pd.DataFrame(dictionary) 
+dataframe.to_csv('visibility_mismatch_on_compound_objects.csv', index=False)
+
+
+
+## Creates CSV of all Compound Objects and their assets
 dataframe = pd.DataFrame(rows) 
 dataframe = dataframe.sort_values(by=['Child original filename'])
 dataframe.to_csv('compound_objects_and_assets.csv', index=False, header=True)
