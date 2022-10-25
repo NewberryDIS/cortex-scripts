@@ -67,22 +67,23 @@ pp(len(rows))
 
 
 ## Uncomment out if you want to create spreadsheet of child assets and compound objects with different visibility statuses
+unique_titles = []
 mismatch = []
 for r in rows:
 	# pp(r.keys())
 	try:
 		if r['Compound object visibility'] != r['Visibility']:
-			if r['Compound object title'] not in mismatch:
-				mismatch.append(r['Compound object title'])
+			if r['Compound object title'] not in unique_titles:
+				unique_titles.append(r['Compound object title'])
+				mismatch.append(r)
 	except KeyError:
 		continue
 		# pp(r)
 
 # pp(mismatch)
 pp(f'How many compound objects have a visibility mismatch: {len(mismatch)}')
-dictionary = {'Compound object title': mismatch}  
-dataframe = pd.DataFrame(dictionary) 
-dataframe.to_csv('visibility_mismatch_on_compound_objects.csv', index=False)
+df = pd.DataFrame(mismatch)
+df.to_csv('visibility_mismatch_on_compound_objects.csv', index=False, header=True)
 
 
 
