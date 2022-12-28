@@ -35,8 +35,8 @@ authenticate_url = f'https://collections.newberry.org/API/Authentication/v1.0/Lo
 authenticate = requests.get(authenticate_url)
 
 token = authenticate.json()
-token = token['APIResponse']['Token']
-token = f'&token={token}'
+# token = token['APIResponse']['Token']
+# token = f'&token={token}'
 json_suffix = '&format=json'
 pp('Authenticated!')
 
@@ -58,7 +58,7 @@ if '.csv' in folders[0]:
 
 else:
     for folder in folders:
-        url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,CoreField.Purpose{token}{json_suffix}'
+        url = f'https://collections.newberry.org/API/search/v3.0/search?query=OriginalSubmissionNumber:{folder}&fields=SystemIdentifier,Title,OriginalFilename,ParentFolderTitle,CoreField.Purpose&token=CortexQSqvVjQBbwiMhYzes5cKtQxmc8Q6XLDh@.qVwGb8HwA*{json_suffix}'
         get_folder = requests.get(url)
         folder_response = get_folder.json()
         total = folder_response['APIResponse']['GlobalInfo']['TotalCount']
@@ -66,6 +66,7 @@ else:
         items = folder_response['APIResponse']['Items']
         # pp(items)
         for item in items:
+            print(item)
             if item['CoreField.Purpose'] == 'Public' or item['CoreField.Purpose'] == 'Pending process':
                 if item['OriginalFilename'].strip()[:4].isdigit() == True:
                     # pp(f'Getting data for: {item["OriginalFilename"]}')
@@ -173,6 +174,7 @@ for i in recordList:
         itemDict = af.processTitle(itemDict)
         itemDict = af.remove_article_from_title(itemDict)
         itemDict = af.processArchivalCollection(itemDict)
+        itemDict["DATE_SORT"] = itemDict["DATE_SORT"] + '-01-01'
         pp(itemDict['TITLE'])
         # pp(itemDict['SUBJECTS'])
         # pp(itemDict['FORMAT'])
