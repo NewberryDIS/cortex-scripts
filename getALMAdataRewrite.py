@@ -175,6 +175,7 @@ for i in recordList:
         itemDict = af.remove_article_from_title(itemDict)
         itemDict = af.processArchivalCollection(itemDict)
         itemDict["DATE_SORT"] = itemDict["DATE_SORT"] + '-01-01'
+        
         pp(itemDict['TITLE'])
         # pp(itemDict['SUBJECTS'])
         # pp(itemDict['FORMAT'])

@@ -710,30 +710,6 @@ def titleFormatter(content, length=150, suffix='...'):
         returnValue = ' '.join(content[:length+1].split(' ')[0:-1]) + suffix
     return returnValue
 
-# the next 3 functions just concatenate with dash, pipe, and space delimeters respectively
-def dashDelimeter(a,b):
-    if len(a) > 0: 
-        return a + '--' + b
-    else:
-        return b
-
-def pipeDelimeter(a,b):
-    try:
-        if a == b: 
-            return a
-        elif len(a) > 0: 
-            return a + '|' + b
-        else:
-            return b
-    except:
-        return a
-
-def concatenator(a,b):
-    if len(a) > 0:
-        return a + ' ' + b
-    else: 
-        return b
-
 
 def excluded_formats(format_value):
     excluded_formats = ['sources', 'postcard albums']
@@ -748,7 +724,7 @@ def resolveList(value):
     valueString = ''
     for idx, val in enumerate(value):
         if idx < 6:
-            valueString = pipeDelimeter(valueString, val)
+            valueString = '|'.join([valueString, val])
     return valueString
 
 
@@ -917,6 +893,12 @@ def valueAssignmentFromCode(itemDict, record,code):
             itemDict['DCMITYPE'] = 'Text'
         if type_code == 'e':
             itemDict['FORMAT_list'].append('Cartographic materials')
+        arch_code = record.text[7]
+        if arch_code = 'c':
+            arch_code = True
+        else: 
+            arch_code = False
+
     # language and date (#2)
     if code == '008' or code == '041': 
         if code == '008' and itemDict['LANGUAGE'] == '':
@@ -926,7 +908,7 @@ def valueAssignmentFromCode(itemDict, record,code):
             for value in record.findall('subfield'):
                 if value.get('code') == 'a':
                     langString = languageFormatter(value.text)
-                    langString = pipeDelimeter(itemDict['LANGUAGE'], langString)
+                    langString = '|'.join([itemDict['LANGUAGE'], langString])
             itemDict['LANGUAGE'] = langString
         if code == '008':
             if len(re.findall('[0-9]{8}',record.text[7:15])) > 0:
@@ -974,24 +956,24 @@ def valueAssignmentFromCode(itemDict, record,code):
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
                 if value.get('code') in 'ab':
-                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                    itemDict['CALL_NUMBER'] = ' '.join([itemDict['CALL_NUMBER'], value.text])
     elif code == '090' and len(itemDict['CALL_NUMBER']) == 0: # call number
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
                 if value.get('code') != 't' or value.get('code') != 'z' or value.get('code') != '9LOCAL':
-                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                    itemDict['CALL_NUMBER'] = ' '.join([itemDict['CALL_NUMBER'], value.text])
                     # pp(itemDict['CALL_NUMBER'])
     elif code == '852' and len(itemDict['CALL_NUMBER']) == 0: # call number
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
                 if value.get('code') not in 'zbt':
-                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                    itemDict['CALL_NUMBER'] = ' '.join([itemDict['CALL_NUMBER'], value.text])
                     # pp(itemDict['CALL_NUMBER'])
     elif code == '099' and len(itemDict['CALL_NUMBER']) == 0: # call number
         for value in record.findall('subfield'):
             if value.get('code').isalpha():
                 if value.get('code') != '9' or value.get('code') != '9LOCAL':
-                    itemDict['CALL_NUMBER'] = concatenator(itemDict['CALL_NUMBER'], value.text)
+                    itemDict['CALL_NUMBER'] = ' '.join([itemDict['CALL_NUMBER'], value.text])
     elif code == '710': # Archival Collection Title
         for value in record.findall('subfield'): 
             if value.get('code') == 'a' and '(Newberry Library)' in value.text and value.text != 'Newberry Library.' and value.text != 'Newberry Library': # took out not in
@@ -1003,16 +985,18 @@ def valueAssignmentFromCode(itemDict, record,code):
             if code == 'a' and code.isalpha():
                 if value.text == 'Edward E. Ayer Collection (Newberry Library)':
                     itemDict['ARCHIVAL_COLLECTION_list'].append('Edward E. Ayer Collection')
-                itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], value.text)
+                itemDict['CREATOR'] = ' '.join([itemDict['CREATOR'], value.text])
             elif code != 'e' and code.isalpha():
-                itemDict['CREATOR'] = concatenator(itemDict['CREATOR'], value.text)
+                itemDict['CREATOR'] = ' '.join([itemDict['CREATOR'], value.text])
         itemDict['CREATOR'] = itemDict['CREATOR'].strip(",. ")
     elif code == '245': # title, archival collection
         returnValue = ''
         for value in record.findall('subfield'): 
             code = value.get('code')
+            if arch_code and code = 'a':
+                itemDict['ARCHIVAL_COLLECTION_list'].append(value.text)
             if code not in 'cgh':
-                returnValue = concatenator(returnValue, value.text)
+                returnValue = ' '.join([returnValue, value.text])
         itemDict['TITLE'] = add_box_no_to_title(itemDict['FILENAME'], titleFormatter(returnValue))
     elif code == '260': # PUBLISHER_ORIGINAL, date
         for value in record.findall('subfield'): 
@@ -1029,7 +1013,7 @@ def valueAssignmentFromCode(itemDict, record,code):
     elif code == '300': # format extent
         for value in record.findall('subfield'): 
             valueText = value.text.replace(' cm.', ' cm').replace(' mm.', ' mm')
-            itemDict['FORMAT_EXTENT'] = concatenator(itemDict['FORMAT_EXTENT'], valueText)
+            itemDict['FORMAT_EXTENT'] = ' '.join([itemDict['FORMAT_EXTENT'], valueText])
     elif code == '500': # description
         for value in record.findall('subfield'): 
             if value.get('code') == 'a':
@@ -1077,11 +1061,11 @@ def valueAssignmentFromCode(itemDict, record,code):
                 subjectDict['a'] = valueText
             elif code == 'v': 
                 # pp(subjectDict['v'])
-                subjectDict['v'] = dashDelimeter(subjectDict['v'], valueText)
+                subjectDict['v'] = '--'.join([subjectDict['v'], valueText])
                 # pp(subjectDict)
                 # pp(valueText)
             elif code == 'z': 
-                subjectDict['z'] = dashDelimeter(subjectDict['z'], valueText)
+                subjectDict['z'] = '--'.join([subjectDict['z'], valueText])
                 # pp(subjectDict)
                 # pp(valueText)
         # fullValue = dashDelimeter(subjectDict['a'], dashDelimeter(subjectDict['x'], subjectDict['y']))
@@ -1093,7 +1077,7 @@ def valueAssignmentFromCode(itemDict, record,code):
                 if val not in itemDict['FORMAT_list']:
                     itemDict['FORMAT_list'].append(val)
             else:
-                stringVersion = pipeDelimeter(stringVersion, val)
+                stringVersion = '|'.join([stringVersion, val])
         # itemDict['SUBJECTS'] = '|'.join(itemDict['SUBJECTS_list'])
         itemDict['SUBJECTS'] = stringVersion
         if subjectDict['z'] not in itemDict['PLACE_list'] and len(subjectDict['z']) > 0:
@@ -1116,7 +1100,7 @@ def valueAssignmentFromCode(itemDict, record,code):
         placeList = list( dict.fromkeys(itemDict['PLACE_list']) )
         for idx, val in enumerate(placeList):
             if idx < 5:
-                placeString = pipeDelimeter(placeString, val)
+                placeString = '|'.join([placeString, val])
         # if len(placeString.split('|')) > 0:
         #     placeList = placeString.split('|')
         #     placeList = list( dict.fromkeys(placeList) )
@@ -1141,7 +1125,7 @@ def valueAssignmentFromCode(itemDict, record,code):
                         val = val[:parenDex + 1] + firstCharAfter.upper() + val[parenDex + 2:]
                 except:
                     pass
-                formatString = pipeDelimeter(formatString, val)
+                formatString = '|'.join([formatString, val])
                 # pp(formatString)
         itemDict['FORMAT'] = formatString
 
