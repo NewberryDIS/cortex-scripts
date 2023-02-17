@@ -15,21 +15,26 @@ def replace_commas_with_pipes(string):
 		string = '|'.join(string)
 	return string
 
+def replace_to_with_backslash(string):
+	if ' to ' in string:
+		string = string.split(' to ')
+		string = '/'.join(string)
+	return string
 
 def create_data_dict(row):
 	d = {}
-	d['FILENAME'] = row['Original File Name']
+	d['FILENAME'] = row['Original file name']
 	d['TITLE'] = row['Title']
-	d['DESCRIPTION'] = row['Description / Data']
+	d['DESCRIPTION'] = row['Description']
 	d['DATE_DISPLAY'] = row['Date Created']
-	d['DATE_SORT'] = row['Sort Date']
+	d['DATE_SORT'] = replace_to_with_backslash(row['Sort Date'])
 	d['PLACE'] = replace_commas_with_pipes(row['Place'])
 	d['CREATOR'] = replace_commas_with_pipes(row['Source / Creator'])
 	d['PUBLISHER_ORIGINAL'] = replace_commas_with_pipes(row['Publisher'])
 	d['SUBJECTS'] = replace_commas_with_pipes(row['Subject']) # Format this
 	d['CONTRIBUTING_INSTITUTION'] = row['Contributing Institution']
 	d['FORMAT'] = replace_commas_with_pipes(row['Format']) # Format this
-	d['DCMITYPE'] = row['Dcmi Type']
+	d['DCMITYPE'] = row['DCMI Type']
 	d['FORMAT_EXTENT'] = row['Extent']
 	d['LANGUAGE'] = replace_commas_with_pipes(row['Language']) # Format this
 	d['ARCHIVAL_COLLECTION'] = row['Archival Collection Title']
@@ -39,15 +44,15 @@ def create_data_dict(row):
 	d['OA_POLICY'] = row['Newberry Open Access Policy']
 	d['STANDARDIZED_RIGHTS'] = row['Rights Status']
 	d['CALL_NUMBER'] = row['Call Number']
-	d['BIBID'] = row['Bibid Link']
+	d['BIBID'] = row['BibID']
 	d['Parent Folder Unique Identifier'] = row['Parent Folder Unique Identifier']
+	d['Sub type ID'] = row['ï»¿"SubType name"']
 	return d
-
 
 rows = []
 titles = []
 count = 0
-with open(args.csv1, encoding='utf-8', errors='ignore') as csv_file:
+with open(args.csv1, encoding='WINDOWS-1252', errors='ignore') as csv_file:
 	reader = csv.DictReader(csv_file)
 	for row in reader:
 		# pp(row.keys())
@@ -56,14 +61,19 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv_file:
 			# count += 1
 			# pp(count)
 			d = create_data_dict(row)
-			if d['BIBID'] != '' and len(d['TITLE']) < 186:
-				d['TITLE'] = f'{d["TITLE"]} [{d["BIBID"]}]'
+			# if d['BIBID'] != '' and len(d['TITLE']) < 186:
+			# 	d['TITLE'] = f'{d["TITLE"]} [{d["BIBID"]}]'
+			if row['ï»¿"SubType name"'] == 'Text':
+				d['Sub type ID'] = 'DO_NL1ND000000013993'
+			if row['ï»¿"SubType name"'] == 'Image':
+				d['Sub type ID'] = 'DO_NL1ND000000013799'
+			if row ['ï»¿"SubType name"'] == 'Still Image'
+				d['Sub type ID'] = 'DO_NL1ND000000013799'
 			rows.append(d)
 
 
 keys = rows[0].keys()
-with open('lead_objects_with_metadata.csv', 'w', encoding='utf-8', errors='ignore', newline='') as outfile:
+with open('lead_objects_with_metadata.csv', 'w', encoding='WINDOWS-1252', errors='ignore', newline='') as outfile:
 	writer = csv.DictWriter(outfile, keys)
 	writer.writeheader()
 	writer.writerows(rows)
-
