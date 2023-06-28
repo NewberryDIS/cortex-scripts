@@ -21,6 +21,7 @@ def replace_to_with_backslash(string):
 		string = '/'.join(string)
 	return string
 
+
 def create_data_dict(row):
 	d = {}
 	d['FILENAME'] = row['Original file name']
@@ -45,7 +46,6 @@ def create_data_dict(row):
 	d['STANDARDIZED_RIGHTS'] = row['Rights Status']
 	d['CALL_NUMBER'] = row['Call Number']
 	d['BIBID'] = row['BibID']
-	d['Parent Compound Object Identifier'] = row['Parent Compound Object Identifier']
 	d['Parent Folder Unique Identifier'] = row['Parent Folder Unique Identifier']
 	d['Sub type ID'] = row['SubType name']
 	return d
@@ -62,8 +62,14 @@ with open(args.csv1, encoding='utf-8-sig', errors='ignore') as csv_file:
 			# count += 1
 			# pp(count)
 			d = create_data_dict(row)
-			# if d['BIBID'] != '' and len(d['TITLE']) < 186:
-			# 	d['TITLE'] = f'{d["TITLE"]} [{d["BIBID"]}]'
+			if d['BIBID'] != '' and len(d['TITLE']) < 186:
+				d['TITLE'] = f'{d["TITLE"]} [{d["BIBID"]}]'
+			# identifier1 = row['Original file name'].split('_')[1]
+			# identifier2 = row['Original file name'].split('_')[2]
+			# identifier3 = row['Original file name'].split('_')[4]
+			# identifier4 = row['Original file name'].split('_')[5]
+			# d['TITLE'] = f'{row["Title"]} [{identifier1} {identifier2}]'
+			# d['TITLE'] = f'{row["Title"]} [{identifier1}_{identifier3}]'
 			if row['SubType name'] == 'Text':
 				d['Sub type ID'] = 'DO_NL1ND000000013993'
 			if row['SubType name'] == 'Image':
@@ -74,7 +80,7 @@ with open(args.csv1, encoding='utf-8-sig', errors='ignore') as csv_file:
 
 
 keys = rows[0].keys()
-with open('lead_objects_with_metadata.csv', 'w', encoding='utf-8-sig', errors='ignore', newline='') as outfile:
+with open('lead_objects_with_metadata_titlediff.csv', 'w', encoding='utf-8-sig', errors='ignore', newline='') as outfile:
 	writer = csv.DictWriter(outfile, keys)
 	writer.writeheader()
 	writer.writerows(rows)
