@@ -1,7 +1,6 @@
 import csv
 from pprint import pprint as pp
 import argparse
-import pandas as pd
 
 
 parser = argparse.ArgumentParser()

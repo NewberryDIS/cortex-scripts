@@ -21,6 +21,7 @@ with open(args.csv2, encoding='utf-8-sig', errors='ignore') as compound_objs:
 	reader = csv.DictReader(compound_objs)
 	for row in reader:
 		# pp(row.keys())
+		# pp(row['Title'])
 		compound_objects[row['Title']] = row['Unique identifier']
 
 pp(compound_objects)
@@ -29,14 +30,18 @@ rows = []
 with open(args.csv1, encoding='utf-8-sig', errors='ignore') as assets_to_be_moved:
 	reader = csv.DictReader(assets_to_be_moved)
 	for row in reader:
-		pp(row['Title'])
+		# pp(row['Title'])
 		row['Unique identifier'] = row['Unique identifier']
-		# identifier1 = row['Original file name'].split('_')[5]
-		# identifier2 = row['Original file name'].split('_')[8]
-		# identifier3 = row['Original file name'].split('_')[4]
+		# identifier1 = row['Original file name'].split('_')[3]
+		# identifier2 = row['Original file name'].split('_')[5]
+		# identifier3 = row['Original file name'].split('_')[9]
 		# identifier4 = row['Original file name'].split('_')[5]
-		# row['Title'] = f'{row["Title"]} [{identifier1}]'
-		row['Title'] = f'{row["Title"]} [{row["BibID"]}]'
+		# row['Title'] = f'{row["Title"]} [{identifier1} {identifier2}]'
+		# row['Title'] = f'{row["Title"]} [{row["BibID"]}]'
+		# if row['BibID'] != '' and len(row['Title']) < 186:
+		# 		row['Title'] = f'{row["Title"]} [{row["BibID"]}]'
+		# date = row['Date Created']
+		# row['Title'] = f'{row["Title"]} {[date]}'
 		get_id = compound_objects.get(row['Title'])
 		pp(row['Title'])
 		pp(get_id)

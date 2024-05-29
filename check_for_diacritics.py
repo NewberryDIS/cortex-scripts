@@ -9,7 +9,7 @@ parser.add_argument('csv1', nargs='?', help='CSV of all assets to be made into c
 args = parser.parse_args()
 
 
-BAD_CHARS = '©Ã' # Add more diacritic characters here that you want to check for
+BAD_CHARS = '©Ã§¬Œ¶¼¡Ì€ˆ' # Add more diacritic characters here that you want to check for
 
 
 def check_if_diacritics_in_field(field):
@@ -27,7 +27,7 @@ with open(args.csv1, encoding='utf-8', errors='ignore') as csv_:
 	reader = csv.DictReader(csv_)
 	for row in reader:
 		# pp(row.keys())
-		if check_if_diacritics_in_field(row['Title']) >= 1: # Or any other field you wish to check for in place of row['Title']
+		if check_if_diacritics_in_field(row['Extent']) >= 1: # Or any other field you wish to check for in place of row['Title']
 			# count += 1
 			# pp(count)
 			# pp(row['Title'])

@@ -59,7 +59,7 @@ with open(args.tagTree, encoding='utf-8', errors='ignore') as csv_:
 # pp(allIds)
 
 allTagKeys = tags[0].keys()
-# # pp(allTagKeys)
+pp(allTagKeys)
 
 rows = []
 count = 0

@@ -2,6 +2,7 @@ import csv
 from pprint import pprint as pp
 import argparse
 import pandas as pd
+import re
 
 
 parser = argparse.ArgumentParser()
@@ -21,10 +22,16 @@ def replace_to_with_backslash(string):
 		string = '/'.join(string)
 	return string
 
+def remove_filetype(string):
+	r = re.search(r'(_\d*\.\D\D\D)\s*$', string)
+	if r is not None:
+		string = row['Original file name'].replace(r.group(1), '').strip()
+	return string
+
 
 def create_data_dict(row):
 	d = {}
-	d['FILENAME'] = row['Original file name']
+	d['FILENAME'] = remove_filetype(row['Original file name'])
 	d['TITLE'] = row['Title']
 	d['DESCRIPTION'] = row['Description']
 	d['DATE_DISPLAY'] = row['Date Created']
@@ -46,8 +53,13 @@ def create_data_dict(row):
 	d['STANDARDIZED_RIGHTS'] = row['Rights Status']
 	d['CALL_NUMBER'] = row['Call Number']
 	d['BIBID'] = row['BibID']
+	d['Parent Compound Object Identifier'] = row['Parent Compound Object Identifier']
 	d['Parent Folder Unique Identifier'] = row['Parent Folder Unique Identifier']
-	d['Sub type ID'] = row['SubType name']
+	d['SubType ID'] = row['SubType name']
+	d['Default Mode'] = ''
+	d['Help'] = row['Help']
+	d['Partially Digitized'] = row['Partially Digitized']
+	d['Projects Tag'] = row['Projects Tag']
 	return d
 
 rows = []
@@ -58,24 +70,32 @@ with open(args.csv1, encoding='utf-8-sig', errors='ignore') as csv_file:
 	for row in reader:
 		# pp(row.keys())
 		# pp(row['Is Lead'])
-		if row['Is Lead'] == 'True':
+		if row['Is Lead'] == 'TRUE':
 			# count += 1
 			# pp(count)
 			d = create_data_dict(row)
-			if d['BIBID'] != '' and len(d['TITLE']) < 186:
-				d['TITLE'] = f'{d["TITLE"]} [{d["BIBID"]}]'
-			# identifier1 = row['Original file name'].split('_')[1]
-			# identifier2 = row['Original file name'].split('_')[2]
-			# identifier3 = row['Original file name'].split('_')[4]
+			# if d['BIBID'] != '' and len(d['TITLE']) < 186:
+			# # 	d['TITLE'] = f'{d["TITLE"]} [{d["BIBID"]}]'
+			identifier1 = row['Original file name'].split('_')[3]
+			identifier2 = row['Original file name'].split('_')[5]
+			# identifier3 = row['Original file name'].split('_')[9]
 			# identifier4 = row['Original file name'].split('_')[5]
+			# date = row['Date Created']
+			# d['TITLE'] = f'{row["Title"]} {[date]}'
+			# d['TITLE'] = f'{row["Title"]} [{identifier1}]'
 			# d['TITLE'] = f'{row["Title"]} [{identifier1} {identifier2}]'
-			# d['TITLE'] = f'{row["Title"]} [{identifier1}_{identifier3}]'
+			if 'Manuscripts' in d['FORMAT'] and 'Text' in row['SubType name']:
+				d['Default Mode'] = 'Thumbnail view'
+			if 'Maps' in d['FORMAT'] and 'Image' or 'Still Image' in row['SubType name']:
+				d['Default Mode'] = 'One-page view'
+			if 'Postcards' in d['FORMAT']:
+				d['Default Mode'] = 'One-page view'
 			if row['SubType name'] == 'Text':
-				d['Sub type ID'] = 'DO_NL1ND000000013993'
+				d['SubType ID'] = 'DO_NL1ND000000013993'
 			if row['SubType name'] == 'Image':
-				d['Sub type ID'] = 'DO_NL1ND000000013799'
+				d['SubType ID'] = 'DO_NL1ND000000013799'
 			if row ['SubType name'] == 'Still Image':
-				d['Sub type ID'] = 'DO_NL1ND000000013799'
+				d['SubType ID'] = 'DO_NL1ND000000013799'
 			rows.append(d)
 
 
