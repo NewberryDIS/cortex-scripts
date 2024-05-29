@@ -587,7 +587,7 @@ def strip_bibid(bibid):
         match = re.match(r, bibid)  # Create a match object using re.match
         bibid_search = match.group(1) if match else None  # Access the matched group
         if bibid_search:
-            full_bibid = f"99{{{bibid_search}}}8805867"
+            full_bibid = f"99{bibid_search}8805867"
             return full_bibid
         else:
             return bibid
