@@ -19,7 +19,7 @@ for root, dirs, files in os.walk(input_dir):
         output_list.append(mkdir_command)
         if image.width > image.height:
             
-            slice_command = '"C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\convert.exe" +adjoin -quiet -crop 2x1@ +repage "' + infile + '" "' + os.path.join(output_path, fn.replace('.TIF','-%01d.TIF')) + '"'
+            slice_command = '" C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI\\magick "' + infile + '" +adjoin -quiet -crop 2x1@ +repage "' + os.path.join(output_path, fn.replace('.TIF','-%01d.TIF')) + '"'
             # slice_command = 'convert +adjoin -quiet -crop 50%x100% "' + infile + '" "' + os.path.join(output_path, fn.replace('.TIF','-%01d.TIF')) + '"'
             output_list.append(slice_command)
         else: 
