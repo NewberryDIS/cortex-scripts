@@ -10,8 +10,8 @@ ArchivesSpace_resource = args.ArchivesSpace_resource_ID
 
 #Set your authentication info, baseurl, and repository info (if relevant)
 baseURL = 'https://newberry-api.as.atlas-sys.com' #<-- Enter your real API URL between the ''
-user = 'dearcangelisa' #<-- Enter your real username between the ''
-password = 'Walter87@NL' #<-- Enter your real password between the ''
+user = 'yourusername' #<-- Enter your real username between the ''
+password = 'yourpassword' #<-- Enter your real password between the ''
 
 #Authorize and store your session key in your header
 auth = requests.post(baseURL + '/users/' + user + '/login?password=' + password).json()
