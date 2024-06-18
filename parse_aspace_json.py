@@ -34,21 +34,24 @@ def process_titles(row):
     # for MOST collections where the final word is not needed for the title
     arch_coll_title_regex = r'^(.*)(?:\s+)(\w+)'
 
-    series_split = series.split(':')
     arch_col_split = re.match(arch_coll_title_regex, arch_coll_title)
+    collection_suffix = arch_col_split.group(2)
+    collection_suffix = ' ' + collection_suffix.lower()
 
-    if series is not None:
+    # series_split = series.split(':')
+    if pd.isna(series) or not isinstance(series, str):
+        series_suffix = collection_suffix
+    else:
         series_split = series.split(':')
         series_suffix = series_split[1]
-    else:
-        series_suffix = ''
 
     # remember to add {{series_split[1]} back if you remove
-    if seriesinfo_in_title is not None:
+    if seriesinfo_in_title is not None and series_suffix != '':
         new_title = f"{final_title}, {arch_col_split.group(1)} {seriesinfo_in_title}{series_suffix}, {date}"
         if date is None:
             new_title = f"{final_title}, {arch_col_split.group(1)} {seriesinfo_in_title}{series_suffix}"
     else:
+        new_title = f"{final_title}, {arch_coll_title}, {date}"
         if date is not None:
             new_title = f"{final_title}, {arch_col_split.group(1)}{series_suffix}, {date}"
         else:
@@ -134,8 +137,9 @@ df.to_csv('see_json_normalizec.csv', index=False)
 # Grab the beginning of the call number from the resource record 'ead_id'
 call_number_start = df.loc[df['level'] == 'collection', 'ead_id'].values[0]
 
-# Grab catalog url
+# Grab catalog url & abstract
 primo_link = None
+abstract = None
 collection_row = df[df['level'] == 'collection']
 
 if not collection_row.empty:
@@ -144,6 +148,10 @@ if not collection_row.empty:
                 for link in catalog_record.get('subnotes', []):
                     if link.get('jsonmodel_type') == 'note_text':
                         primo_link = link.get('content')
+    for abstract in collection_row['notes'].iloc[0]:
+            if isinstance(abstract, dict) and abstract.get('label') == 'Abstract':
+                abtext = abstract.get('content')
+                abtext = ''.join(abtext)
 
 if primo_link is not None:
     catalog_link = return_link(primo_link)
@@ -296,6 +304,7 @@ new_df['Call Number'] = call_number_start
 # new_df['Language'] = matched_languages
 # new_df['Series Name'] = series_name
 # new_df['Series Content'] = series_note
+new_df['Description'] = f'{abtext}'
 new_df['Series Name'] = new_df['Series Name'].str.lower()
 new_df['Finding Aid Link'] = f"<a href='https://archives.newberry.org{finding_aid}' target='_blank'>View finding aid</a> | <a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma{catalog_link}' target='_blank'>View record</a>"
 new_df['Open Access Policy'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/policies#open-access' target='_blank'>these terms and conditions.</a>"
@@ -320,7 +329,7 @@ cortex_df['BibID'] = cortex_df['Original file name'].str.extract(bibid).astype(s
 
 # Extract the box number from the file name. Look at filename to match how box is indicated, can be bx, box, b.
 # box_number = r'bx_0+(\d+)'
-box_number = r'b[o]x_0*(\d+)'
+box_number = r'b[o]?x_0*(\d+)'
 cortex_df['Box'] = cortex_df['Original file name'].str.extract(box_number).astype(str)
 # print(cortex_df['Box'])
 
@@ -336,7 +345,7 @@ merged_df['Call Number'] = merged_df.apply(finalize_callnumber, axis=1)
 
 merged_df['Title'] = merged_df['Title_Aspace']
 
-final_df_columns = ['Unique identifier', 'BibID', 'Original file name', 'Title', 'Created Date', 'Language', 'Format', 'Contributing Institution', 'Archival Collection Title', 'Finding Aid Link', 'Call Number', 'Open Access Policy', 'Ref ID', 'Help']
+final_df_columns = ['Unique identifier', 'BibID', 'Original file name', 'Title', 'Created Date', 'Language', 'Description', 'Format', 'Contributing Institution', 'Archival Collection Title', 'Finding Aid Link', 'Call Number', 'Open Access Policy', 'Ref ID', 'Help']
 
 final_df = merged_df[final_df_columns]
 
