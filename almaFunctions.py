@@ -1058,10 +1058,10 @@ def valueAssignmentFromCode(itemDict, record,code):
         for value in record.findall('subfield'): 
             valueText = value.text.replace(' cm.', ' cm').replace(' mm.', ' mm')
             itemDict['FORMAT_EXTENT'] = concatenator(itemDict['FORMAT_EXTENT'], valueText)
-    elif code == '500': # description
-        for value in record.findall('subfield'): 
-            if value.get('code') == 'a':
-                itemDict['DESCRIPTION'] = value.text
+    # elif code == '500': # description
+    #     for value in record.findall('subfield'): 
+    #         if value.get('code') == 'a':
+    #             itemDict['DESCRIPTION'] = value.text
 
     elif code == '520': # summary
         valueObj = {
@@ -1081,8 +1081,8 @@ def valueAssignmentFromCode(itemDict, record,code):
         for value in record.findall('subfield'):
             if value.get('code') == 'a':
                 biohistnote = value.text + biohistnote 
-            elif value.get('code') == 'b':
-                biohistnote = biohistnote + value.text
+            # elif value.get('code') == 'b':
+            #     biohistnote = biohistnote + value.text
         itemDict['BIOGRAPHICAL/HISTORICAL NOTE'] = biohistnote 
     elif code == '610' or code == '650' or code == '611': # subject, place, format
         # pp(value.text)
