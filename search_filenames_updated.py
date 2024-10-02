@@ -6,6 +6,21 @@ import requests
 import json
 import time
 
+def make_api_call_with_retries(api_url, max_retries=3, delay=2):
+    tries = 0
+    while tries < max_retries:
+        try:
+            response = requests.get(api_url)
+            response.raise_for_status()  # Raise an error for bad status codes
+            return response
+        except requests.exceptions.RequestException as e:
+            print(f"Attempt {tries + 1} failed: {e}")
+            tries += 1
+            if tries < max_retries:
+                time.sleep(delay)  # Wait before retrying
+    print("Max retries reached. Moving on.")
+    return None
+
 start = time.time()
 
 parser = argparse.ArgumentParser()
@@ -35,7 +50,7 @@ all_files = []
 for value in df['Filename']:
     api_url = f'https://collections.newberry.org/API/search/v3.0/search?query="{value}"mediatype:image&fields=Identifier,OriginalFileName{token}{json_suffix}'
 
-    response = requests.get(api_url)
+    response = make_api_call_with_retries(api_url, max_retries=5, delay=3)
 
     if response.status_code == 200:
         data = response.json()

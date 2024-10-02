@@ -15,7 +15,7 @@ for root, dirs, files in os.walk(input_dir):
         outfile = os.path.join(output_path, fn)
         image = Image.open(infile)
         mkdir_command = 'if not exist "' + output_path + '" md /S "' + output_path + '"'
-        # mkdir_command = 'mkdir -p ' + output_path
+        mkdir_command = 'mkdir -p ' + output_path
         output_list.append(mkdir_command)
         if image.width > image.height:
             

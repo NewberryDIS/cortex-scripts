@@ -84,9 +84,9 @@ with open(args.csv1, encoding='utf-8-sig', errors='ignore') as csv_file:
 			# count += 1
 			# pp(count)
 			d = create_data_dict(row)
-			# identifier1 = row['Original file name'].split('_')[4]
-			# identifier2 = row['Original file name'].split('_')[5]
-			# d['TITLE'] = f'{row["Title"]} [{identifier1}]'
+			# identifier1 = row['Original file name'].split('_')[2]
+			# identifier2 = row['Original file name'].split('_')[3]
+			# d['TITLE'] = f'{row["Title"]} [{identifier1} {identifier2}]'
 			# if d['BIBID'] != '' and len(d['TITLE']) < 186:
 			# 	d['TITLE'] = f'{d["TITLE"]} [{d["BIBID"]}]'
 			if 'Manuscripts' in d['FORMAT'] and 'Text' in row['SubType name']:

@@ -146,7 +146,7 @@ for i in recordList:
 				call_number = root.find('.//call_number').text
 				itemDict['CALL_NUMBER'] = call_number
 			except Exception as e:
-				logging.error(f"An error occured while retrieving the call number:", e)
+				logging.error(f"An error occured while retrieving the call number:", {e})
 	except urllib.error.URLError as e:
 		print("Error", e)
 	except socket.timeout:
@@ -186,7 +186,7 @@ for i in recordList:
 			# pp('Root')
 			# pp(root)
 	except urllib.error.URLError as e:
-		print("Error", e)
+		print("Error", {e})
 	except socket.timeout:
 		print("Error: Request timed out")
 	# except Exception as e: 

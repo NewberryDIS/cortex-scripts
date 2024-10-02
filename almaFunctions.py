@@ -750,11 +750,11 @@ def excluded_formats(format_value):
     else:
         return None
 
-# def remove_place_manuscripts(manuscript_format):
-#     if 'Manuscripts' in 'FORMAT_list':
-#         r = re.search(r'(, \w{3,})', 'FORMAT_list')
-#         if r != None:
-#             manuscript_format = manuscript_format.replace(r.group(), '').strip()
+def remove_place_manuscripts(manuscript_format):
+    if 'Manuscripts' in 'FORMAT_list':
+        r = re.search(r'(, \w{3,})', 'FORMAT_list')
+        if r != None:
+            manuscript_format = manuscript_format.replace(r.group(), '').strip()
 
 
 # because a lot of values can come from multiple marc codes, we dump them all into a list and then resolve the list after we've been through all the fields

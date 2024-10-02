@@ -16,20 +16,59 @@ parser = argparse.ArgumentParser()
 parser.add_argument('Cortex_CSV', nargs='?', help='CSV of Cortex Unique IDS and filenames')
 args = parser.parse_args()
 
+# remove html
+def remove_html(text):
+    soup = BeautifulSoup(text, "html.parser")
+    return soup.get_text()
+
 # changes titles so that they contain folder, archival collection title, series, and date i.e., "Abbeville's Tides, typed draft, Jack Fuller works, 2000"
 def process_titles(row):
-    title = row['Title_Aspace']
+    keywords = {
+        'diary': 'diary',
+        'diaries': 'diary',
+        'journal': 'journal',
+        'journals': 'journal',
+        'account daybooks': 'account daybooks',
+        'account ledger': 'account daybooks',
+        'daybook': 'daybook'
+    }
+    
+    call_number = row['Call Number']
+    title_html = row['Title_Aspace']
+    title = remove_html(title_html)
     arch_coll_title = row['Archival Collection Title']
     series = row['Series Name']
     date = row['Created Date']
+    sub_series = row['Subseries Name']
+    # print(series)
+    # print(title)
+    
+    family_name = call_number.split()[-1]
+    family_series_as_arch = None
+
+    if family_name in series and family_name in arch_coll_title and 'family' not in series.lower():
+        family_series_as_arch = series
+    elif family_name in sub_series and family_name in arch_coll_title and family_name not in title.split('-')[0]:
+        family_series_as_arch = sub_series.split(':')[1].strip()
+        # series = sub_series
+    # elif family_name in title.split('.')[0]:
+    #     family_series_as_arch = title.split('.')[0].strip()
+    elif family_name in title.split('-')[0]:
+        family_series_as_arch = title.split('-')[0].strip()
+        # print(family_series_as_arch)
+    
+    if family_name is not None:
+        title = re.sub(r'^.*? - ', '', title).strip()
 
     if title[0].islower() and '-' in title:
         title_split = title.split(' - ')
         final_title = title_split[1][0].capitalize() + title_split[1][1:]
         seriesinfo_in_title = title_split[0]
+        # print(seriesinfo_in_title)
     else:
         seriesinfo_in_title = None
-        final_title = title
+        final_title = title[0].upper() + title[1:]
+        # print(final_title)
 
     # for MOST collections where the final word is not needed for the title
     arch_coll_title_regex = r'^(.*)(?:\s+)(\w+)'
@@ -42,22 +81,40 @@ def process_titles(row):
     if pd.isna(series) or not isinstance(series, str):
         series_suffix = collection_suffix
     else:
-        series_split = series.split(':')
-        series_suffix = series_split[1]
+        series_suffix = series.split(':')[1].lower()
+        # series_suffix = series_split[1]
+        # series_suffix = series_suffix.lower()
+        # print(series_suffix)
+
+    for keyword, label in keywords.items():
+        if keyword in title.lower():
+            if family_series_as_arch is not None and ',' in family_series_as_arch:
+                return f"{family_series_as_arch.split(',')[1]} {family_series_as_arch.split(',')[0]} {label}, {date}"
+            elif family_series_as_arch is not None:
+                return f"{family_series_as_arch} {label}, {date}"
+                # new_title = f"{family_series_as_arch} {label}, {date}"
+            # new_title = f"{arch_col_split.group(1)} {label}, {date}"
+            # return new_title
+   
+    if family_series_as_arch is not None and seriesinfo_in_title is not None:
+        family_series_title = f"{final_title}, {family_series_as_arch} {seriesinfo_in_title}{series_suffix}, {date}"
+        return family_series_title
+    elif family_series_as_arch is not None:
+        family_series_title = f"{final_title}, {family_series_as_arch} papers, {date}"
+        return family_series_title
 
     # remember to add {{series_split[1]} back if you remove
     if seriesinfo_in_title is not None and series_suffix != '':
-        new_title = f"{final_title}, {arch_col_split.group(1)} {seriesinfo_in_title}{series_suffix}, {date}"
+        series_title = f"{final_title}, {arch_col_split.group(1)} {seriesinfo_in_title}{series_suffix}, {date}"
         if date is None:
-            new_title = f"{final_title}, {arch_col_split.group(1)} {seriesinfo_in_title}{series_suffix}"
+            series_title = f"{final_title}, {arch_col_split.group(1)} {seriesinfo_in_title}{series_suffix}"
     else:
-        new_title = f"{final_title}, {arch_coll_title}, {date}"
+        series_title = f"{final_title}, {arch_coll_title}, {date}"
         if date is not None:
-            new_title = f"{final_title}, {arch_col_split.group(1)}{series_suffix}, {date}"
+            series_title = f"{final_title}, {arch_col_split.group(1)}{series_suffix}, {date}"
         else:
-            new_title = f"{final_title}, {arch_col_split.group(1)}{series_suffix}"
-
-    return new_title
+            series_title = f"{final_title}, {arch_col_split.group(1)}{series_suffix}"
+    return series_title
 
 def finalize_callnumber(row):
     manuscript = row['Call Number']
@@ -171,6 +228,7 @@ uri_mapping = {row['uri']: row for index, row in df.iterrows()}
 collection_title = []
 # bioghist_contents = []
 series_name = []
+subseries_name = []
 series_note = []
 rows_list = []
 created_date = None
@@ -181,18 +239,22 @@ for index, row in df[(df['level'].isin(['otherlevel', 'file', 'item']))].iterrow
 
     # Grab the created date from the otherlevel arrays
     date_list = row['dates']
+    # print(date_list)
 
-    if isinstance(date_list, list) and len(date_list) > 0:
-        # Assuming there's only one date entry in the list, extract the "expression"
-        date_entry = date_list[0]
-        created_date = date_entry.get('expression')
-        
-        if created_date is None:
-            created_date = collection_date
-        elif created_date.lower() in ('n.d.' or 'no date' or 'undated'):
-            created_date = collection_date
-        elif '[' in created_date:
+    # Initialize created_date to None for each iteration
+    created_date = None
+
+    # Check if date_list is empty or not
+    if not date_list or date_list == '[]':  # Handle empty date lists
+        created_date = collection_date
+    elif isinstance(date_list, list):
+        created_date = date_list[0].get('expression', collection_date)
+        # print(created_date)
+        if '[' in created_date:
             created_date = created_date.replace("[", "").replace("]","")
+        if created_date in ('undated' or 'n.d.' or 'no date') or created_date is None:
+            created_date = collection_date
+        # print(created_date)
     
     ancestors = row['ancestors']
     if isinstance(ancestors, list):
@@ -205,6 +267,16 @@ for index, row in df[(df['level'].isin(['otherlevel', 'file', 'item']))].iterrow
                     if access_uri.any():
                         series_name = access_uri['title']
                         # print(series_name)
+                    else:
+                        series_name = None
+            elif ancestor['level'] == 'subseries':
+                uri = ancestor['ref']
+                if uri in uri_mapping:
+                    access_uri = uri_mapping.get(uri)
+                    if access_uri.any():
+                        subseries_name = access_uri['title']
+                    else:
+                        subseries_name = None
     
     resource_uri = row['resource.ref']
     if resource_uri in uri_mapping:
@@ -257,6 +329,7 @@ for index, row in df[(df['level'].isin(['otherlevel', 'file', 'item']))].iterrow
                                                 'Created Date': created_date,
                                                 'Folder': str(folder_value),
                                                 'Series Name': series_name,
+                                                'Subseries Name': subseries_name,
                                                 'Archival Collection Title': collection_title,
                                                 'Language': matched_languages
                                                 }
@@ -268,6 +341,7 @@ for index, row in df[(df['level'].isin(['otherlevel', 'file', 'item']))].iterrow
                                 'Created Date': created_date,
                                 'Folder': str(folder_number_range),
                                 'Series Name': series_name,
+                                'Subseries Name': subseries_name,
                                 'Archival Collection Title': collection_title,
                                 'Language': matched_languages
                             }
@@ -298,14 +372,14 @@ finding_aid = df.loc[df['level'] == 'collection', 'uri'].values[0]
 
 # Creating columns in dataframe
 new_df['Call Number'] = call_number_start
-# new_df['Archival Collection Title] = collection_title'
+# new_df['Archival Collection Title] = collection_title
 # new_df['Biographical/Historical Note'] = bioghist_contents
 # new_df['Summary Long'] = summary
 # new_df['Language'] = matched_languages
 # new_df['Series Name'] = series_name
 # new_df['Series Content'] = series_note
 new_df['Description'] = f'{abtext}'
-new_df['Series Name'] = new_df['Series Name'].str.lower()
+# new_df['Series Name'] = new_df['Series Name'].str.lower()
 new_df['Finding Aid Link'] = f"<a href='https://archives.newberry.org{finding_aid}' target='_blank'>View finding aid</a> | <a href='https://i-share-nby.primo.exlibrisgroup.com/permalink/01CARLI_NBY/i5mcb2/alma{catalog_link}' target='_blank'>View record</a>"
 new_df['Open Access Policy'] = "The Newberry makes its collections available for any lawful purpose, commercial or non-commercial, without licensing or permission fees to the library, subject to <a href='https://www.newberry.org/policies#open-access' target='_blank'>these terms and conditions.</a>"
 new_df['Help'] = "Need help finding, searching, sharing, or downloading? Check out our <a href='https://digital.newberry.org/help/' target='_blank'>help page</a>!"
@@ -338,7 +412,7 @@ cortex_df.to_csv('testing_issues.csv', index=False)
 merged_df = cortex_df.merge(new_df, on='Folder', how='inner')
 
 # Save and open the merged dataframe if you think there may be issues before finalizing the columns.
-# merged_df.to_csv('test_to_see_issues.csv', index=False)
+merged_df.to_csv('test_to_see_issues.csv', index=False)
 
 merged_df['Title_Aspace'] = merged_df.apply(process_titles, axis=1)
 merged_df['Call Number'] = merged_df.apply(finalize_callnumber, axis=1)

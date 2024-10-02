@@ -32,8 +32,8 @@ with open(args.csv1, encoding='utf-8-sig', errors='ignore') as assets_to_be_move
 	for row in reader:
 		# pp(row['Title'])
 		row['Unique identifier'] = row['Unique identifier']
-		# identifier1 = row['Original file name'].split('_')[3]
-		# identifier2 = row['Original file name'].split('_')[5]
+		# identifier1 = row['Original file name'].split('_')[2]
+		# identifier2 = row['Original file name'].split('_')[3]
 		# identifier3 = row['Original file name'].split('_')[9]
 		# identifier4 = row['Original file name'].split('_')[5]
 		# row['Title'] = f'{row["Title"]} [{identifier1} {identifier2}]'
@@ -68,5 +68,5 @@ df.sort_values(['Original file name'],
                     ascending=[True], 
                     inplace=True)
 
-df.to_csv(r'new_assets_to_be_moved.csv', index = False, header=True)
+df.to_csv(r'new_assets_to_be_moved_1.csv', index = False, header=True)
 
